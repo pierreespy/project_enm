@@ -6,9 +6,11 @@
 // used offline or whenever the feed is unreachable. Its shape (DailyContent) is
 // exactly what the feed's content.json must return.
 
-// Raw JSON feed — one file per day, overwritten daily in the content repo.
+// "Mailbox" address — a fixed URL the app always reads. The daily routine drops
+// the new edition here (latest.json) after archiving it under editions/. If the
+// routine skips a day, this simply keeps pointing at the last valid edition.
 export const CONTENT_URL =
-  'https://raw.githubusercontent.com/pierreespy/project-enm-content/main/content.json';
+  'https://raw.githubusercontent.com/pierreespy/project-enm-content/main/latest.json';
 
 export type Essentiel = {
   label: string;
@@ -42,6 +44,9 @@ export type Mot = {
 
 /** The full daily payload — exactly the JSON shape the content repo serves. */
 export type DailyContent = {
+  /** ISO date of the edition, e.g. "2026-07-09" (optional; for archive/debug). */
+  date?: string;
+  /** Display date shown in the masthead corner, e.g. "9 juill." */
   dateShort: string;
   essentiel: Essentiel;
   rubriques: Rubrique[];
