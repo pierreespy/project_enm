@@ -54,6 +54,13 @@ export default function App() {
     };
   }, []);
 
+  // Pull-to-refresh du Journal : même relève que ci-dessus, mais à la demande.
+  // Le composant attend la promesse pour arrêter son indicateur.
+  const refreshContent = useCallback(async () => {
+    const c = await fetchDailyContent();
+    if (c) setContent(c);
+  }, []);
+
   const openUrl = useCallback((url: string) => {
     Linking.openURL(url).catch(() => {});
   }, []);
@@ -66,7 +73,7 @@ export default function App() {
     <View style={styles.root}>
       <StatusBar style="dark" />
       {tab === 'journal' ? (
-        <JournalScreen content={content} onOpen={openUrl} />
+        <JournalScreen content={content} onOpen={openUrl} onRefresh={refreshContent} />
       ) : (
         <TermeScreen mot={content.mot} />
       )}
