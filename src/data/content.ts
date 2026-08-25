@@ -1,14 +1,18 @@
-// Daily content for Project ENM.
+// Edition content for Project ENM.
 //
-// At runtime the app fetches the day's content from the GitHub content repo
+// Two editions are published every day ("matin" and "midi"); the app always
+// reads whichever one is currently in the mailbox (see `slot` below).
+//
+// At runtime the app fetches the current edition from the GitHub content repo
 // (see CONTENT_URL / src/data/remote.ts). The object below is the bundled
 // FALLBACK — the sample "contenu juridique crédible" from the design prototype —
 // used offline or whenever the feed is unreachable. Its shape (DailyContent) is
 // exactly what the feed's content.json must return.
 
-// "Mailbox" address — a fixed URL the app always reads. The daily routine drops
-// the new edition here (latest.json) after archiving it under editions/. If the
-// routine skips a day, this simply keeps pointing at the last valid edition.
+// "Mailbox" address — a fixed URL the app always reads. The routine drops each
+// new edition here (latest.json) after archiving it under editions/, twice a
+// day. If the routine skips a run, this simply keeps pointing at the last valid
+// edition.
 export const CONTENT_URL =
   'https://raw.githubusercontent.com/pierreespy/project-enm-content/main/latest.json';
 
@@ -48,6 +52,8 @@ export type DailyContent = {
   date?: string;
   /** Display date shown in the masthead corner, e.g. "9 juill." */
   dateShort: string;
+  /** Which of the day's two editions this is (absent on pre-2026-08 archives). */
+  slot?: 'matin' | 'midi';
   essentiel: Essentiel;
   rubriques: Rubrique[];
   mot: Mot;

@@ -6,7 +6,9 @@ import { RubriqueCard } from '../components/RubriqueCard';
 import type { DailyContent } from '../data/content';
 
 /** Screen 1 — Journal: masthead, "L'essentiel du jour" hero, then one card per
- *  rubrique. */
+ *  rubrique. The masthead corner shows the edition's date and, since editions
+ *  are published twice a day, which of the two ("matin" / "midi") is on screen —
+ *  older archives carry no slot and show the date alone. */
 export function JournalScreen({
   content,
   onOpen,
@@ -20,7 +22,11 @@ export function JournalScreen({
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Header cornerLabel={content.dateShort} />
+      <Header
+        cornerLabel={
+          content.slot ? `${content.dateShort} · ${content.slot}` : content.dateShort
+        }
+      />
 
       <EssentielCard data={content.essentiel} onOpen={onOpen} />
 

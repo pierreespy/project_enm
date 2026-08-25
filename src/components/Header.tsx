@@ -4,7 +4,7 @@ import { colors, fonts } from '../theme';
 
 /**
  * Masthead — the centered "PROJECT / ENM" monogram (logo direction 1f) with the
- * baseline "Veille juridique quotidienne" and a date/label in the top-right corner.
+ * baseline "Veille juridique biquotidienne" and a date/label in the top-right corner.
  * Shared by both screens.
  */
 export function Header({ cornerLabel }: { cornerLabel: string }) {
@@ -13,7 +13,7 @@ export function Header({ cornerLabel }: { cornerLabel: string }) {
       <Text style={styles.corner}>{cornerLabel}</Text>
       <Text style={styles.project}>Project</Text>
       <Text style={styles.enm}>ENM</Text>
-      <Text style={styles.baseline}>Veille juridique quotidienne</Text>
+      <Text style={styles.baseline}>Veille juridique biquotidienne</Text>
     </View>
   );
 }

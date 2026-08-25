@@ -1,6 +1,7 @@
 # Project ENM — appli mobile (Expo / React Native)
 
-Veille juridique quotidienne pour juristes, avocats et magistrats. Implémentation
+Veille juridique **biquotidienne** (éditions « matin » et « midi ») pour juristes,
+avocats et magistrats. Implémentation
 native (iOS) de la maquette conçue dans Claude Design (`../project/Project ENM - App.dc.html`).
 
 Parti pris repris fidèlement de la maquette : **papier crème éditorial**, accent
@@ -23,11 +24,20 @@ jour** (icône **balance de la justice**).
 
 ## Contenu
 
-Le contenu quotidien est pour l'instant **codé en dur** dans
-[`src/data/content.ts`](src/data/content.ts) (le contenu juridique de démonstration
-de la maquette). L'app avait été pensée pour aller chercher ce contenu sur un
-dépôt GitHub quotidien : le module `content.ts` reproduit la forme attendue de ce
-flux, de sorte que brancher une couche de `fetch` plus tard ne touche que ce fichier.
+Le contenu est publié **deux fois par jour** (créneaux `matin` et `midi`) par la
+routine du dépôt [`project-enm-content`](https://github.com/pierreespy/project-enm-content),
+qui dépose chaque édition dans la « boîte aux lettres » `latest.json`. L'app lit
+cette adresse fixe au démarrage **et à chaque retour au premier plan**, de sorte
+qu'une app ouverte le matin bascule sur l'édition du midi dès sa publication
+(voir [`src/data/remote.ts`](src/data/remote.ts)).
+
+Le créneau de l'édition affichée (`slot`) apparaît dans le coin du bandeau, à
+côté de la date : « 25 août · midi ».
+
+[`src/data/content.ts`](src/data/content.ts) contient le **fallback embarqué** —
+le contenu juridique de démonstration de la maquette — affiché hors ligne ou si le
+flux est inaccessible ; il définit aussi le type `DailyContent`, la forme exacte
+que le flux doit servir.
 
 ## Lancer
 
