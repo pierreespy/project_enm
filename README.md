@@ -8,7 +8,7 @@ Parti pris repris fidèlement de la maquette : **papier crème éditorial**, acc
 **bleu marine**, typographie serif **Spectral**, chips colorées par rubrique,
 « Essentiel » = une actu phare, onglets fonctionnels et fiche du terme dépliable.
 
-## Deux écrans
+## Trois écrans
 
 - **Journal** — masthead « PROJECT / ENM », encadré marine « L'essentiel du jour »
   (une actu phare), puis 6 cartes (une par rubrique : Législation & réglementation,
@@ -18,9 +18,12 @@ Parti pris repris fidèlement de la maquette : **papier crème éditorial**, acc
   flèche ouvre l'article à sa source.
 - **Terme du jour** — le terme en très gros sur carte marine, un sous-titre, une
   carte « définition », et un bouton **+ / –** qui déplie/replie la fiche complète.
+- **Astrophysique** — la leçon du jour du cours : carte marine (numéro, titre,
+  sous-titre), introduction, une carte par section, le vocabulaire à retenir, un
+  récapitulatif en trois lignes et l'annonce de la leçon suivante.
 
-Barre d'onglets flottante (pilule marine) : **Journal** (icône page) et **Terme du
-jour** (icône **balance de la justice**).
+Barre d'onglets flottante (pilule marine) : **Journal** (icône page), **Terme du
+jour** (icône **balance de la justice**) et **Astrophysique** (icône planète).
 
 ## Contenu
 
@@ -33,6 +36,12 @@ qu'une app ouverte le matin bascule sur l'édition du midi dès sa publication
 
 Le créneau de l'édition affichée (`slot`) apparaît dans le coin du bandeau, à
 côté de la date : « 25 août · midi ».
+
+L'onglet **Astrophysique** sert un cours suivi, écrit pour un lecteur sans
+formation scientifique : une leçon par jour, numérotée, chacune s'appuyant sur
+les précédentes. Les leçons vivent dans `astro/lessons/` du dépôt de contenu et
+la leçon en cours est jointe à `latest.json` (champ `astro`) — l'app n'a donc
+toujours qu'un seul fichier à relever.
 
 [`src/data/content.ts`](src/data/content.ts) contient le **fallback embarqué** —
 le contenu juridique de démonstration de la maquette — affiché hors ligne ou si le

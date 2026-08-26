@@ -14,6 +14,7 @@ import { colors } from './src/theme';
 import { TabBar, type Tab } from './src/components/TabBar';
 import { JournalScreen } from './src/screens/JournalScreen';
 import { TermeScreen } from './src/screens/TermeScreen';
+import { AstroScreen } from './src/screens/AstroScreen';
 import { fetchDailyContent, fallbackContent, type DailyContent } from './src/data/remote';
 
 export default function App() {
@@ -72,11 +73,11 @@ export default function App() {
   return (
     <View style={styles.root}>
       <StatusBar style="dark" />
-      {tab === 'journal' ? (
+      {tab === 'journal' && (
         <JournalScreen content={content} onOpen={openUrl} onRefresh={refreshContent} />
-      ) : (
-        <TermeScreen mot={content.mot} />
       )}
+      {tab === 'terme' && <TermeScreen mot={content.mot} />}
+      {tab === 'astro' && <AstroScreen lesson={content.astro} />}
       <TabBar tab={tab} onChange={setTab} />
     </View>
   );

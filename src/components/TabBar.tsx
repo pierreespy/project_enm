@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
-import { JournalIcon, ScaleIcon } from './icons';
+import { JournalIcon, ScaleIcon, AstroIcon } from './icons';
 
-export type Tab = 'journal' | 'terme';
+export type Tab = 'journal' | 'terme' | 'astro';
 
-/** Floating navy pill tab bar with the active tab in full white and the
- *  inactive one dimmed. Two tabs: Journal (page) and Terme du jour (scales). */
+/** Floating navy pill tab bar with the active tab in full white and the others
+ *  dimmed. Trois onglets : Journal (page), Terme du jour (balance) et
+ *  Astrophysique (planète) — le cours quotidien. */
 export function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   return (
     <View style={styles.bar}>
@@ -22,6 +23,12 @@ export function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void
           Terme du jour
         </Text>
       </Pressable>
+      <Pressable style={styles.btn} onPress={() => onChange('astro')}>
+        <AstroIcon color={tab === 'astro' ? colors.tabActive : colors.tabInactive} />
+        <Text style={[styles.label, { color: tab === 'astro' ? colors.tabActive : colors.tabInactive }]}>
+          Astrophysique
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -29,8 +36,8 @@ export function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void
 const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
-    left: 60,
-    right: 60,
+    left: 22,
+    right: 22,
     bottom: 26,
     flexDirection: 'row',
     backgroundColor: colors.navySurface,
@@ -52,7 +59,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fonts.regular,
-    fontSize: 10,
-    letterSpacing: 0.4,
+    fontSize: 9.5,
+    letterSpacing: 0.2,
   },
 });

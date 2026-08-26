@@ -37,6 +37,21 @@ export type Rubrique = {
 
 export type FicheSection = { h: string; body: string };
 
+/** Une leçon du cours d'astrophysique — le contenu de l'onglet du même nom.
+ *  Le cours est suivi : une leçon par jour, numérotée, chacune s'appuyant sur
+ *  les précédentes. Le flux ne sert que la leçon en cours (champ `astro`). */
+export type AstroLesson = {
+  n: number;
+  title: string;
+  subtitle: string;
+  duration?: string;
+  intro: string;
+  sections: FicheSection[];
+  keyTerms: { term: string; def: string }[];
+  recap: string;
+  next?: string;
+};
+
 export type Mot = {
   label: string;
   term: string;
@@ -54,6 +69,8 @@ export type DailyContent = {
   dateShort: string;
   /** Which of the day's two editions this is (absent on pre-2026-08 archives). */
   slot?: 'matin' | 'midi';
+  /** Leçon d'astrophysique du jour (absente des archives antérieures au cours). */
+  astro?: AstroLesson;
   essentiel: Essentiel;
   rubriques: Rubrique[];
   mot: Mot;
@@ -154,5 +171,51 @@ const mot: Mot = {
   seeAlso: 'Voir aussi — légitime défense (art. 122-5) · état de nécessité (art. 122-7)',
 };
 
+
+/** Leçon embarquée — la première du cours, servie tant que le flux est muet. */
+const astro: AstroLesson = {
+  n: 1,
+  title: "Regarder loin, c'est regarder dans le passé",
+  subtitle: "Ce qu'étudie l'astrophysique, et pourquoi la lumière est sa seule pièce au dossier",
+  duration: '6 min',
+  intro:
+    "Première leçon : on ne suppose rien. Pas de formule, pas de vocabulaire acquis. On pose seulement les deux ou trois idées sans lesquelles rien de la suite ne tiendrait.",
+  sections: [
+    {
+      h: 'Décrire, puis expliquer',
+      body: "L'astronomie observe et décrit : où sont les astres, comment ils se déplacent. L'astrophysique applique à ces objets les lois de la physique ordinaire — chaleur, gravité, lumière — pour expliquer pourquoi ils sont ainsi. Le pari, immense, est que les lois valables dans un laboratoire terrestre valent aussi à dix milliards de milliards de kilomètres.",
+    },
+    {
+      h: 'La seule pièce au dossier : la lumière',
+      body: "Presque tout ce que nous savons de l'univers nous est arrivé sous forme de lumière — visible, mais aussi ondes radio, infrarouge, rayons X, de même nature à l'énergie près. Ce témoin unique a une propriété décisive : il voyage vite, environ 300 000 kilomètres par seconde, mais pas instantanément.",
+    },
+    {
+      h: "L'échelle, en temps de trajet",
+      body: "On mesure donc les distances par le temps que la lumière met à les parcourir. La Lune est à 1,3 seconde-lumière, le Soleil à 8 minutes, l'étoile la plus proche à 4,2 années-lumière, la galaxie d'Andromède à 2,5 millions d'années-lumière. Une année-lumière est une distance, jamais une durée.",
+    },
+    {
+      h: 'La conséquence : le ciel est un passé',
+      body: "Nous ne voyons jamais un astre tel qu'il est, mais tel qu'il était quand sa lumière est partie. Regarder loin, c'est mécaniquement regarder tôt : l'outil le plus puissant de la discipline, et sa limite la plus dure.",
+    },
+  ],
+  keyTerms: [
+    {
+      term: 'Astrophysique',
+      def: "Application des lois de la physique aux objets célestes, pour expliquer leur nature et leur évolution — là où l'astronomie se borne à les décrire.",
+    },
+    {
+      term: 'Année-lumière',
+      def: "Une distance, non une durée : celle que la lumière parcourt en un an, environ 9 500 milliards de kilomètres.",
+    },
+    {
+      term: 'Vitesse de la lumière',
+      def: "Environ 300 000 km/s dans le vide. Finie, et indépassable — d'où le décalage entre ce qu'un astre est et ce que nous en voyons.",
+    },
+  ],
+  recap:
+    "L'astrophysique explique les astres avec la physique d'ici-bas, sans pouvoir expérimenter sur eux. Elle ne travaille que sur la lumière reçue. Celle-ci voyageant à vitesse finie, toute observation lointaine est celle d'un état passé.",
+  next: 'Prochaine leçon — pourquoi une étoile brille, et pourquoi cela ne dure pas.',
+};
+
 /** Bundled offline fallback — served whenever the GitHub feed is unreachable. */
-export const fallbackContent: DailyContent = { dateShort, essentiel, rubriques, mot };
+export const fallbackContent: DailyContent = { dateShort, essentiel, rubriques, mot, astro };
