@@ -20,7 +20,8 @@ Parti pris repris fidèlement de la maquette : **papier crème éditorial**, acc
   carte « définition », et un bouton **+ / –** qui déplie/replie la fiche complète.
 - **Astrophysique** — la leçon du jour du cours : carte marine (numéro, titre,
   sous-titre), introduction, une carte par section, le vocabulaire à retenir, un
-  récapitulatif en trois lignes et l'annonce de la leçon suivante.
+  récapitulatif en trois lignes et l'annonce de la leçon suivante. Un sommaire
+  dépliable donne accès à **toutes les leçons passées**.
 
 Barre d'onglets flottante (pilule marine) : **Journal** (icône page), **Terme du
 jour** (icône **balance de la justice**) et **Astrophysique** (icône planète).
@@ -41,7 +42,10 @@ L'onglet **Astrophysique** sert un cours suivi, écrit pour un lecteur sans
 formation scientifique : une leçon par jour, numérotée, chacune s'appuyant sur
 les précédentes. Les leçons vivent dans `astro/lessons/` du dépôt de contenu et
 la leçon en cours est jointe à `latest.json` (champ `astro`) — l'app n'a donc
-toujours qu'un seul fichier à relever.
+qu'un seul fichier à relever au démarrage. Les leçons **passées** sont listées
+via `astro/index.json` et chargées une par une, à la demande, quand l'utilisateur
+les ouvre depuis le sommaire : le poids du flux quotidien ne grossit pas avec le
+cours.
 
 [`src/data/content.ts`](src/data/content.ts) contient le **fallback embarqué** —
 le contenu juridique de démonstration de la maquette — affiché hors ligne ou si le

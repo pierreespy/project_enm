@@ -13,8 +13,24 @@
 // new edition here (latest.json) after archiving it under editions/, twice a
 // day. If the routine skips a run, this simply keeps pointing at the last valid
 // edition.
-export const CONTENT_URL =
-  'https://raw.githubusercontent.com/pierreespy/project-enm-content/main/latest.json';
+const CONTENT_REPO =
+  'https://raw.githubusercontent.com/pierreespy/project-enm-content/main/';
+
+export const CONTENT_URL = `${CONTENT_REPO}latest.json`;
+
+/** Registre du cours d'astrophysique — sert à lister les leçons passées.
+ *  Seule la leçon en cours voyage dans latest.json ; les précédentes sont
+ *  chargées à la demande, une par une, depuis leur fichier d'archive. */
+export const ASTRO_INDEX_URL = `${CONTENT_REPO}astro/index.json`;
+
+/** Une entrée du registre — le minimum pour dresser le sommaire. */
+export type AstroIndexEntry = { n: number; file: string; title: string };
+
+/** URL d'archive d'une leçon. Le chemin vient du flux : on le contraint à la
+ *  forme attendue plutôt que de le concaténer tel quel. */
+export function astroLessonUrl(file: string): string | null {
+  return /^astro\/lessons\/[A-Za-z0-9._-]+\.json$/.test(file) ? CONTENT_REPO + file : null;
+}
 
 export type Essentiel = {
   label: string;

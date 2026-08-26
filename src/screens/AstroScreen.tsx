@@ -1,14 +1,67 @@
-import React from 'react';
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ScrollView, View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { Header } from '../components/Header';
 import { colors, fonts } from '../theme';
-import type { AstroLesson } from '../data/content';
+import { fetchAstroIndex, fetchAstroLesson } from '../data/remote';
+import type { AstroIndexEntry, AstroLesson } from '../data/content';
 
-/** Screen 3 — Astrophysique : le cours du jour. Une leçon par jour, numérotée,
- *  qui part de zéro et s'appuie sur les précédentes. Mise en page reprise du
- *  Terme du jour (héros marine, cartes crème) pour rester dans l'identité. */
+/** Screen 3 — Astrophysique : le cours. Une leçon par jour, numérotée, qui part
+ *  de zéro et s'appuie sur les précédentes. Mise en page reprise du Terme du
+ *  jour (héros marine, cartes crème) pour rester dans l'identité.
+ *
+ *  Le sommaire donne accès à toutes les leçons passées : seule celle du jour
+ *  voyage dans latest.json, les archives sont chargées à la demande. */
 export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
-  if (!lesson) {
+  const scroll = useRef<ScrollView>(null);
+  const [index, setIndex] = useState<AstroIndexEntry[] | null>(null);
+  const [tocOpen, setTocOpen] = useState(false);
+  // Leçon d'archive en cours de consultation ; null = la leçon du jour.
+  const [archive, setArchive] = useState<AstroLesson | null>(null);
+  const [loadingN, setLoadingN] = useState<number | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetchAstroIndex().then((i) => {
+      if (alive) setIndex(i);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const shown = archive ?? lesson;
+
+  const open = useCallback(
+    async (entry: AstroIndexEntry) => {
+      setTocOpen(false);
+      setFailed(false);
+      // La leçon du jour est déjà en mémoire — inutile de la retélécharger.
+      if (lesson && entry.n === lesson.n) {
+        setArchive(null);
+        scroll.current?.scrollTo({ y: 0, animated: false });
+        return;
+      }
+      setLoadingN(entry.n);
+      const l = await fetchAstroLesson(entry.file);
+      setLoadingN(null);
+      if (!l) {
+        setFailed(true);
+        return;
+      }
+      setArchive(l);
+      scroll.current?.scrollTo({ y: 0, animated: false });
+    },
+    [lesson],
+  );
+
+  const backToToday = useCallback(() => {
+    setArchive(null);
+    setFailed(false);
+    scroll.current?.scrollTo({ y: 0, animated: false });
+  }, []);
+
+  if (!shown) {
     return (
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Header cornerLabel="Astro" />
@@ -24,27 +77,79 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
 
   return (
     <ScrollView
+      ref={scroll}
       style={styles.scroll}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Header cornerLabel={`Leçon ${lesson.n}`} />
+      <Header cornerLabel={`Leçon ${shown.n}`} />
 
       <View style={styles.hero}>
         <Text style={styles.heroLabel}>
-          Cours d’astrophysique · Leçon {lesson.n}
-          {lesson.duration ? ` · ${lesson.duration}` : ''}
+          Cours d’astrophysique · Leçon {shown.n}
+          {shown.duration ? ` · ${shown.duration}` : ''}
         </Text>
-        <Text style={styles.title}>{lesson.title}</Text>
-        <Text style={styles.subtitle}>{lesson.subtitle}</Text>
+        <Text style={styles.title}>{shown.title}</Text>
+        <Text style={styles.subtitle}>{shown.subtitle}</Text>
       </View>
 
+      {!!archive && lesson && archive.n !== lesson.n && (
+        <Pressable style={styles.banner} onPress={backToToday}>
+          <Text style={styles.bannerText}>
+            Leçon passée — revenir à la leçon du jour (n° {lesson.n})
+          </Text>
+        </Pressable>
+      )}
+
+      {!!index && index.length > 1 && (
+        <>
+          <Pressable style={styles.button} onPress={() => setTocOpen((v) => !v)}>
+            <Text style={styles.buttonSign}>{tocOpen ? '–' : '+'}</Text>
+            <Text style={styles.buttonLabel}>
+              {tocOpen ? 'Fermer le sommaire' : `Leçons précédentes (${index.length})`}
+            </Text>
+          </Pressable>
+
+          {tocOpen && (
+            <View style={[styles.card, styles.spaced]}>
+              {index.map((entry, i) => {
+                const current = entry.n === shown.n;
+                return (
+                  <Pressable
+                    key={entry.n}
+                    onPress={() => open(entry)}
+                    style={i === 0 ? styles.tocRow : [styles.tocRow, styles.tocRowBorder]}
+                  >
+                    <Text style={[styles.tocN, current && styles.tocCurrent]}>
+                      {String(entry.n).padStart(2, '0')}
+                    </Text>
+                    <Text style={[styles.tocTitle, current && styles.tocCurrent]} numberOfLines={2}>
+                      {entry.title}
+                    </Text>
+                    {loadingN === entry.n && <ActivityIndicator size="small" color={colors.navy} />}
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+        </>
+      )}
+
+      {failed && (
+        <View style={[styles.card, styles.spaced]}>
+          <Text style={styles.body}>
+            Cette leçon n’a pas pu être chargée. Vérifiez votre connexion et réessayez
+            depuis le sommaire.
+          </Text>
+        </View>
+      )}
+
       <View style={styles.defCard}>
-        <Text style={styles.intro}>{lesson.intro}</Text>
+        <Text style={styles.intro}>{shown.intro}</Text>
       </View>
 
       <View style={styles.list}>
-        {lesson.sections.map((s, i) => (
+        {shown.sections.map((s, i) => (
           <View key={i} style={styles.card}>
             <Text style={styles.cardTitle}>{s.h}</Text>
             <Text style={styles.body}>{s.body}</Text>
@@ -52,10 +157,10 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
         ))}
       </View>
 
-      {lesson.keyTerms.length > 0 && (
+      {shown.keyTerms.length > 0 && (
         <View style={[styles.card, styles.spaced]}>
           <Text style={styles.cardLabel}>À retenir — vocabulaire</Text>
-          {lesson.keyTerms.map((t, i) => (
+          {shown.keyTerms.map((t, i) => (
             <View key={i} style={i === 0 ? undefined : styles.termRow}>
               <Text style={styles.term}>{t.term}</Text>
               <Text style={styles.body}>{t.def}</Text>
@@ -66,10 +171,10 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
 
       <View style={styles.recapCard}>
         <Text style={styles.recapLabel}>En trois lignes</Text>
-        <Text style={styles.recap}>{lesson.recap}</Text>
+        <Text style={styles.recap}>{shown.recap}</Text>
       </View>
 
-      {!!lesson.next && <Text style={styles.next}>{lesson.next}</Text>}
+      {!!shown.next && !archive && <Text style={styles.next}>{shown.next}</Text>}
     </ScrollView>
   );
 }
@@ -205,6 +310,73 @@ const styles = StyleSheet.create({
     fontSize: 14.5,
     lineHeight: 22,
     color: colors.onNavy,
+  },
+  button: {
+    width: '100%',
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    backgroundColor: colors.cardBg,
+    borderWidth: 1,
+    borderColor: '#cdd6e2',
+    borderRadius: 14,
+    padding: 14,
+    ...cardShadow,
+  },
+  buttonSign: {
+    fontFamily: fonts.regular,
+    fontSize: 19,
+    lineHeight: 19,
+    color: colors.navy,
+  },
+  buttonLabel: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    letterSpacing: 0.3,
+    color: colors.navy,
+  },
+  tocRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 11,
+  },
+  tocRowBorder: {
+    borderTopWidth: 1,
+    borderTopColor: colors.cardDivider,
+  },
+  tocN: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.source,
+    width: 24,
+  },
+  tocTitle: {
+    flex: 1,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.inkSoft,
+  },
+  tocCurrent: { color: colors.navy },
+  banner: {
+    marginTop: 12,
+    backgroundColor: colors.cardBg,
+    borderWidth: 1,
+    borderColor: '#cdd6e2',
+    borderRadius: 14,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    ...cardShadow,
+  },
+  bannerText: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    letterSpacing: 0.2,
+    color: colors.navy,
+    textAlign: 'center',
   },
   next: {
     fontFamily: fonts.italic,
