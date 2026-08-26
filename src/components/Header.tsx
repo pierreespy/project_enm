@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 4,
     paddingHorizontal: 2,
-    paddingBottom: 20,
+    paddingBottom: 17,
   },
   corner: {
     position: 'absolute',
@@ -50,8 +50,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.ink,
     letterSpacing: 1,
-    lineHeight: 30,
-    marginTop: 3,
+    // lineHeight ≥ fontSize × 1,25 : à hauteur égale au corps, la boîte de ligne
+    // rogne le haut des capitales en Spectral gras. Le marginTop compense le
+    // supplément d'interligne pour que le monogramme ne descende pas.
+    lineHeight: 38,
+    marginTop: -1,
   },
   baseline: {
     fontFamily: fonts.regular,
