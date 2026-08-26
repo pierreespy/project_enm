@@ -1,42 +1,58 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import {
+  Modal, View, Text, Image, Pressable, StyleSheet, useWindowDimensions,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Path } from 'react-native-svg';
 
-/** Combiné iOS — décliné en version « raccrocher » par une simple rotation. */
-function PhoneIcon({ size = 34, rotated = false }: { size?: number; rotated?: boolean }) {
+const PHOTO = require('../../assets/john-pork.png');
+
+// La photo EST l'interface : nom, sous-titre et boutons y sont déjà dessinés.
+// On ne redessine donc rien par-dessus — on pose seulement deux zones tactiles
+// invisibles à l'emplacement des boutons. Coordonnées relatives, mesurées sur
+// l'image source (853 × 1844) : centre du bouton rouge, du bouton vert, et
+// diamètre de la zone sensible (généreuse, ~1,2× le bouton visible).
+const PHOTO_RATIO = 853 / 1844;
+const DECLINE_X = 0.232;
+const ACCEPT_X = 0.762;
+const BUTTONS_Y = 0.786;
+const HIT_SIZE = 0.28; // en fraction de la largeur affichée
+
+/** Combiné iOS — utilisé seulement par l'écran « appel en cours ». */
+function PhoneIcon({ size = 32 }: { size?: number }) {
   return (
-    <Svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="#fff"
-      style={rotated ? { transform: [{ rotate: '135deg' }] } : undefined}
-    >
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="#fff" style={{ transform: [{ rotate: '135deg' }] }}>
       <Path d="M6.6 2.3c.7 0 1.3.4 1.6 1l1.3 3a1.8 1.8 0 0 1-.5 2.1l-1.2 1a12.6 12.6 0 0 0 5.8 5.8l1-1.2a1.8 1.8 0 0 1 2.1-.5l3 1.3c.6.3 1 .9 1 1.6v2.9c0 1-.8 1.8-1.8 1.7C10.2 20.4 3.6 13.8 2.4 4.1 2.3 3.1 3.1 2.3 4.1 2.3z" />
     </Svg>
   );
 }
 
 /**
- * Easter egg — l'écran d'appel entrant de « John Pork », ouvert quand on tire
- * longtemps le Journal depuis le haut (voir hooks/useLongPullEasterEgg).
+ * Easter egg — l'écran d'appel entrant, ouvert quand on tire longtemps le
+ * Journal depuis le haut (voir hooks/useLongPullEasterEgg).
  *
- * La photo est `assets/john-pork.png` : remplacer ce fichier suffit à changer
- * l'appelant, tout le reste (nom, boutons) est dessiné ici.
+ * Refuser ferme. Accepter passe sur un écran « appel en cours » qui raccroche
+ * de lui-même. Pour changer d'appelant : remplacer assets/john-pork.png — et
+ * si le cadrage des boutons diffère, ajuster les constantes ci-dessus.
  */
-export function IncomingCall({
-  visible,
-  onDismiss,
-  name = 'John Pork',
-}: {
-  visible: boolean;
-  onDismiss: () => void;
-  name?: string;
-}) {
+export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismiss: () => void }) {
+  const { width, height } = useWindowDimensions();
   const [answered, setAnswered] = useState(false);
 
-  // Décrocher : l'appel « prend », puis se termine tout seul.
+  // La photo est affichée en entier (jamais rognée) : les zones tactiles
+  // restent alignées sur les boutons quel que soit le format de l'écran.
+  const boxW = Math.min(width, height * PHOTO_RATIO);
+  const boxH = boxW / PHOTO_RATIO;
+  const hit = boxW * HIT_SIZE;
+  const zone = (cx: number) => ({
+    position: 'absolute' as const,
+    left: cx * boxW - hit / 2,
+    top: BUTTONS_Y * boxH - hit / 2,
+    width: hit,
+    height: hit,
+    borderRadius: hit / 2,
+  });
+
   useEffect(() => {
     if (!answered) return;
     const t = setTimeout(() => {
@@ -46,7 +62,6 @@ export function IncomingCall({
     return () => clearTimeout(t);
   }, [answered, onDismiss]);
 
-  // Repartir d'un appel neuf à chaque ouverture.
   useEffect(() => {
     if (!visible) setAnswered(false);
   }, [visible]);
@@ -65,108 +80,66 @@ export function IncomingCall({
     >
       <View style={styles.root}>
         <StatusBar style="light" />
-        <Image
-          source={require('../../assets/john-pork.png')}
-          style={StyleSheet.absoluteFill}
-          resizeMode="cover"
-        />
-        <View style={styles.scrim} />
+        <View style={{ width: boxW, height: boxH }}>
+          <Image source={PHOTO} style={styles.photo} resizeMode="contain" />
 
-        <View style={styles.header}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.status}>
-            {answered ? 'Appel en cours…' : 'est en train d’appeler…'}
-          </Text>
-        </View>
-
-        <View style={styles.actions}>
-          {answered ? (
-            <View style={styles.action}>
+          {!answered && (
+            <>
               <Pressable
-                style={[styles.circle, styles.decline]}
+                style={zone(DECLINE_X)}
                 onPress={hangUp}
                 accessibilityRole="button"
-                accessibilityLabel="Raccrocher"
-              >
-                <PhoneIcon rotated />
-              </Pressable>
-              <Text style={styles.actionLabel}>Raccrocher</Text>
-            </View>
-          ) : (
-            <>
-              <View style={styles.action}>
-                <Pressable
-                  style={[styles.circle, styles.decline]}
-                  onPress={hangUp}
-                  accessibilityRole="button"
-                  accessibilityLabel="Refuser l’appel"
-                >
-                  <PhoneIcon rotated />
-                </Pressable>
-                <Text style={styles.actionLabel}>Refuser</Text>
-              </View>
-              <View style={styles.action}>
-                <Pressable
-                  style={[styles.circle, styles.accept]}
-                  onPress={() => setAnswered(true)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Accepter l’appel"
-                >
-                  <PhoneIcon />
-                </Pressable>
-                <Text style={styles.actionLabel}>Accepter</Text>
-              </View>
+                accessibilityLabel="Refuser l’appel"
+              />
+              <Pressable
+                style={zone(ACCEPT_X)}
+                onPress={() => setAnswered(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Accepter l’appel"
+              />
             </>
           )}
         </View>
+
+        {answered && (
+          <View style={styles.inCall}>
+            <Text style={styles.name}>John Pork</Text>
+            <Text style={styles.status}>Appel en cours…</Text>
+            <Pressable
+              style={styles.hangUp}
+              onPress={hangUp}
+              accessibilityRole="button"
+              accessibilityLabel="Raccrocher"
+            >
+              <PhoneIcon />
+            </Pressable>
+          </View>
+        )}
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000', justifyContent: 'space-between' },
-  // Voile sombre en haut et en bas : le nom et les boutons restent lisibles
-  // quelle que soit la photo.
-  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.18)' },
-  header: { alignItems: 'center', paddingTop: 96, paddingHorizontal: 24 },
-  name: {
-    fontSize: 42,
-    fontWeight: '600',
-    color: '#fff',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.35)',
-    textShadowRadius: 12,
-  },
-  status: {
-    fontSize: 21,
-    color: 'rgba(255,255,255,0.92)',
-    marginTop: 8,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.35)',
-    textShadowRadius: 10,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'flex-end',
-    paddingBottom: 72,
-    paddingHorizontal: 28,
-  },
-  action: { alignItems: 'center', gap: 12 },
-  circle: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
+  root: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' },
+  photo: { width: '100%', height: '100%' },
+  // Écran « appel en cours » : un voile sur la photo, pour ne pas laisser
+  // cohabiter « est en train d'appeler… » (dessiné dans l'image) avec l'appel pris.
+  inCall: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.78)',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 10,
   },
-  decline: { backgroundColor: '#ff3b30' },
-  accept: { backgroundColor: '#34c759' },
-  actionLabel: {
-    fontSize: 16,
-    color: '#fff',
-    textShadowColor: 'rgba(0,0,0,0.4)',
-    textShadowRadius: 8,
+  name: { fontSize: 40, fontWeight: '600', color: '#fff' },
+  status: { fontSize: 20, color: 'rgba(255,255,255,0.85)', marginBottom: 44 },
+  hangUp: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    backgroundColor: '#ff3b30',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
