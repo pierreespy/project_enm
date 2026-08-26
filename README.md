@@ -18,10 +18,11 @@ Parti pris repris fidèlement de la maquette : **papier crème éditorial**, acc
   flèche ouvre l'article à sa source.
 - **Terme du jour** — le terme en très gros sur carte marine, un sous-titre, une
   carte « définition », et un bouton **+ / –** qui déplie/replie la fiche complète.
-- **Astrophysique** — la leçon du jour du cours : carte marine (numéro, titre,
-  sous-titre), introduction, une carte par section, le vocabulaire à retenir, un
-  récapitulatif en trois lignes et l'annonce de la leçon suivante. Un sommaire
-  dépliable donne accès à **toutes les leçons passées**.
+- **Astrophysique** — la leçon du jour d'un **mini-cours** quotidien (une notion,
+  2 à 3 minutes) : carte marine (numéro, titre, sous-titre), deux ou trois
+  cartes de section, le vocabulaire à retenir, un récapitulatif d'une phrase et
+  l'annonce de la leçon du lendemain. Un sommaire dépliable donne accès à
+  **toutes les leçons passées**.
 
 Barre d'onglets flottante (pilule marine) : **Journal** (icône page), **Terme du
 jour** (icône **balance de la justice**) et **Astrophysique** (icône planète).
@@ -38,9 +39,9 @@ qu'une app ouverte le matin bascule sur l'édition du midi dès sa publication
 Le créneau de l'édition affichée (`slot`) apparaît dans le coin du bandeau, à
 côté de la date : « 25 août · midi ».
 
-L'onglet **Astrophysique** sert un cours suivi, écrit pour un lecteur sans
-formation scientifique : une leçon par jour, numérotée, chacune s'appuyant sur
-les précédentes. Les leçons vivent dans `astro/lessons/` du dépôt de contenu et
+L'onglet **Astrophysique** sert un mini-cours suivi, écrit pour un lecteur sans
+formation scientifique : une notion par jour, 2 à 3 minutes de lecture, chaque
+leçon s'appuyant sur les précédentes — le pari est la régularité, pas le volume. Les leçons vivent dans `astro/lessons/` du dépôt de contenu et
 la leçon en cours est jointe à `latest.json` (champ `astro`) — l'app n'a donc
 qu'un seul fichier à relever au démarrage. Les leçons **passées** sont listées
 via `astro/index.json` et chargées une par une, à la demande, quand l'utilisateur

@@ -54,14 +54,16 @@ export type Rubrique = {
 export type FicheSection = { h: string; body: string };
 
 /** Une leçon du cours d'astrophysique — le contenu de l'onglet du même nom.
- *  Le cours est suivi : une leçon par jour, numérotée, chacune s'appuyant sur
- *  les précédentes. Le flux ne sert que la leçon en cours (champ `astro`). */
+ *  Mini-cours : une notion par jour, 2 à 3 minutes de lecture, chaque leçon
+ *  s'appuyant sur les précédentes. Le flux ne sert que la leçon en cours
+ *  (champ `astro`) ; les archives se chargent à la demande. */
 export type AstroLesson = {
   n: number;
   title: string;
   subtitle: string;
   duration?: string;
-  intro: string;
+  /** Facultative : le format court entre le plus souvent directement dans le sujet. */
+  intro?: string;
   sections: FicheSection[];
   keyTerms: { term: string; def: string }[];
   recap: string;
@@ -191,46 +193,37 @@ const mot: Mot = {
 /** Leçon embarquée — la première du cours, servie tant que le flux est muet. */
 const astro: AstroLesson = {
   n: 1,
-  title: "Regarder loin, c'est regarder dans le passé",
-  subtitle: "Ce qu'étudie l'astrophysique, et pourquoi la lumière est sa seule pièce au dossier",
-  duration: '6 min',
-  intro:
-    "Première leçon : on ne suppose rien. Pas de formule, pas de vocabulaire acquis. On pose seulement les deux ou trois idées sans lesquelles rien de la suite ne tiendrait.",
+  title: 'Décrire, ou expliquer',
+  subtitle:
+    "Ce qui sépare l'astronomie de l'astrophysique, et pourquoi cette science ne fait jamais d'expérience",
+  duration: '3 min',
   sections: [
     {
-      h: 'Décrire, puis expliquer',
-      body: "L'astronomie observe et décrit : où sont les astres, comment ils se déplacent. L'astrophysique applique à ces objets les lois de la physique ordinaire — chaleur, gravité, lumière — pour expliquer pourquoi ils sont ainsi. Le pari, immense, est que les lois valables dans un laboratoire terrestre valent aussi à dix milliards de milliards de kilomètres.",
+      h: 'Deux gestes différents',
+      body: "L'astronomie observe et décrit : où sont les astres, comment ils se déplacent, à quoi ils ressemblent. C'est la plus vieille science du monde, née du besoin de prévoir les saisons. L'astrophysique fait autre chose. Elle applique à ces mêmes objets les lois de la physique ordinaire — chaleur, gravité, lumière — pour expliquer non plus comment ils se comportent, mais pourquoi. Pourquoi une étoile brille. Pourquoi elle finit par s'éteindre.",
     },
     {
-      h: 'La seule pièce au dossier : la lumière',
-      body: "Presque tout ce que nous savons de l'univers nous est arrivé sous forme de lumière — visible, mais aussi ondes radio, infrarouge, rayons X, de même nature à l'énergie près. Ce témoin unique a une propriété décisive : il voyage vite, environ 300 000 kilomètres par seconde, mais pas instantanément.",
+      h: 'Une science sans expérience',
+      body: "Vous connaissez professionnellement cette contrainte : on ne peut pas rejouer les faits. L'astrophysicien non plus. Il n'allume pas une étoile pour voir, il ne fait pas entrer deux galaxies en collision pour vérifier. Il ne dispose que de ce qui lui parvient, et doit remonter de la trace au fait. Sa rigueur ne tient pas à la maîtrise de l'objet — elle est nulle — mais à la qualité du raisonnement qui va de la trace à sa cause.",
     },
     {
-      h: "L'échelle, en temps de trajet",
-      body: "On mesure donc les distances par le temps que la lumière met à les parcourir. La Lune est à 1,3 seconde-lumière, le Soleil à 8 minutes, l'étoile la plus proche à 4,2 années-lumière, la galaxie d'Andromède à 2,5 millions d'années-lumière. Une année-lumière est une distance, jamais une durée.",
-    },
-    {
-      h: 'La conséquence : le ciel est un passé',
-      body: "Nous ne voyons jamais un astre tel qu'il est, mais tel qu'il était quand sa lumière est partie. Regarder loin, c'est mécaniquement regarder tôt : l'outil le plus puissant de la discipline, et sa limite la plus dure.",
+      h: 'Le pari qu’elle fait',
+      body: "Reste une hypothèse de départ, si énorme qu'on l'oublie : supposer que les lois vérifiées dans un laboratoire terrestre valent aussi à des milliards de milliards de kilomètres, et il y a des milliards d'années. Rien ne l'imposait. C'est un pari, jamais démenti depuis le XVIIᵉ siècle — et c'est lui qui autorise tout le reste.",
     },
   ],
   keyTerms: [
     {
       term: 'Astrophysique',
-      def: "Application des lois de la physique aux objets célestes, pour expliquer leur nature et leur évolution — là où l'astronomie se borne à les décrire.",
+      def: "Application des lois de la physique aux objets célestes, pour expliquer leur nature et leur évolution — là où l'astronomie se borne à les observer et les décrire.",
     },
     {
-      term: 'Année-lumière',
-      def: "Une distance, non une durée : celle que la lumière parcourt en un an, environ 9 500 milliards de kilomètres.",
-    },
-    {
-      term: 'Vitesse de la lumière',
-      def: "Environ 300 000 km/s dans le vide. Finie, et indépassable — d'où le décalage entre ce qu'un astre est et ce que nous en voyons.",
+      term: 'Universalité des lois physiques',
+      def: "Hypothèse fondatrice selon laquelle les lois vérifiées sur Terre valent partout et à toute époque de l'univers.",
     },
   ],
   recap:
-    "L'astrophysique explique les astres avec la physique d'ici-bas, sans pouvoir expérimenter sur eux. Elle ne travaille que sur la lumière reçue. Celle-ci voyageant à vitesse finie, toute observation lointaine est celle d'un état passé.",
-  next: 'Prochaine leçon — pourquoi une étoile brille, et pourquoi cela ne dure pas.',
+    "L'astronomie décrit le ciel, l'astrophysique l'explique. Elle n'expérimente jamais : elle raisonne sur des indices, en pariant que la physique d'ici vaut partout.",
+  next: 'Demain — la lumière, seul témoin dont nous disposions.',
 };
 
 /** Bundled offline fallback — served whenever the GitHub feed is unreachable. */

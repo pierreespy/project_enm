@@ -144,9 +144,11 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
         </View>
       )}
 
-      <View style={styles.defCard}>
-        <Text style={styles.intro}>{shown.intro}</Text>
-      </View>
+      {!!shown.intro && (
+        <View style={styles.defCard}>
+          <Text style={styles.intro}>{shown.intro}</Text>
+        </View>
+      )}
 
       <View style={styles.list}>
         {shown.sections.map((s, i) => (
@@ -243,7 +245,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.inkSoft,
   },
-  list: { marginTop: 14, gap: 12 },
+  list: { marginTop: 12, gap: 12 },
   card: {
     backgroundColor: colors.cardBg,
     borderWidth: 1,
