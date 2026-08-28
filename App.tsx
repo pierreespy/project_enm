@@ -19,8 +19,22 @@ import { TermeScreen } from './src/screens/TermeScreen';
 import { AstroScreen } from './src/screens/AstroScreen';
 import { fetchDailyContent, fallbackContent, type DailyContent } from './src/data/remote';
 
+const TAB_ORDER: Tab[] = ['journal', 'terme', 'astro'];
+
 export default function App() {
-  const [tab, setTab] = useState<Tab>('journal');
+  // L'onglet courant et le sens du dernier saut voyagent ensemble : c'est ce
+  // sens qui dit de quel côté l'écran entre. Passer au Terme depuis le Journal
+  // le fait venir de la droite, y revenir le fait venir de la gauche — les
+  // trois écrans se rangent alors mentalement dans l'ordre de la barre.
+  const [nav, setNav] = useState<{ tab: Tab; step: number }>({ tab: 'journal', step: 0 });
+  const { tab, step } = nav;
+
+  const changeTab = useCallback((next: Tab) => {
+    setNav((cur) => ({
+      tab: next,
+      step: TAB_ORDER.indexOf(next) - TAB_ORDER.indexOf(cur.tab),
+    }));
+  }, []);
 
   // Start from the bundled fallback so the app renders instantly, then swap in
   // the feed once it arrives. If the fetch fails, the fallback stands.
@@ -76,16 +90,22 @@ export default function App() {
   return (
     <View style={styles.root}>
       <StatusBar style="dark" />
-      {/* La clé change avec l'onglet : chaque écran entre en fondu au lieu
-          d'apparaître d'un bloc. */}
-      <FadeIn key={tab} style={styles.screen} duration={260} distance={8}>
+      {/* La clé change avec l'onglet : chaque écran entre en fondu, décalé du
+          côté d'où il vient, au lieu d'apparaître d'un bloc. */}
+      <FadeIn
+        key={tab}
+        style={styles.screen}
+        duration={280}
+        distance={0}
+        distanceX={Math.sign(step) * 26}
+      >
         {tab === 'journal' && (
           <JournalScreen content={content} onOpen={openUrl} onRefresh={refreshContent} />
         )}
         {tab === 'terme' && <TermeScreen mot={content.mot} />}
         {tab === 'astro' && <AstroScreen lesson={content.astro} />}
       </FadeIn>
-      <TabBar tab={tab} onChange={setTab} />
+      <TabBar tab={tab} onChange={changeTab} />
     </View>
   );
 }

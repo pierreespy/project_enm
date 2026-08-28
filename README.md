@@ -24,13 +24,42 @@ Parti pris repris fidèlement de la maquette : **papier crème éditorial**, acc
   l'annonce de la leçon du lendemain. Un sommaire dépliable donne accès à
   **toutes les leçons passées**.
 
+## Mouvement et retour tactile
+
 Toutes les cartes entrent en fondu, décalées les unes des autres dans l'ordre de
-lecture (`src/components/FadeIn.tsx`, qui respecte le réglage système « Réduire
-les animations »), et les gestes sont soulignés par un retour haptique au
-vocabulaire volontairement court (`src/lib/haptics.ts`).
+lecture (`src/components/FadeIn.tsx`). Les surfaces pressées s'enfoncent sous le
+doigt (`src/components/Press.tsx`), le bandeau du Journal se décale en parallaxe
+pendant le défilement, une pastille claire glisse sous l'onglet actif et chaque
+écran entre du côté d'où il vient.
+
+Les gestes sont soulignés par un retour haptique au vocabulaire volontairement
+court (`src/lib/haptics.ts`), du cran le plus fin (`tick`) au coup franc
+(`heavy`), plus des figures rythmées pour la sonnerie.
+
+Le réglage système **« Réduire les animations »** est respecté partout
+(`src/hooks/useReduceMotion.ts`) : le mouvement disparaît, l'haptique reste —
+c'est elle qui porte l'information une fois l'animation coupée.
 
 Barre d'onglets flottante (pilule marine) : **Journal** (icône page), **Terme du
 jour** (icône **balance de la justice**) et **Astrophysique** (icône planète).
+
+## Easter egg
+
+Tirer le Journal depuis le haut relève la boîte aux lettres. Tirer **longtemps**
+— au-delà du seuil, et en maintenant — fait monter un filet marine en haut de
+l'écran, avec des crans haptiques qui s'accélèrent, puis ouvre un **appel
+entrant** en plein écran : ça sonne, ça vibre en cadence, et la photo tressaute
+à chaque salve. Refuser ferme, accepter passe sur un écran « appel en cours »
+avec compteur, qui raccroche de lui-même.
+
+La sonnerie (`assets/ringtone.mp3`) est une **composition maison** — un arpège de
+marimba synthétisé par [`tools/make-ringtone.py`](tools/make-ringtone.py) — et
+non une sonnerie système, qui ne pourrait pas être embarquée. Le fichier est une
+boucle exacte : la cadence est dans l'audio, et `RING_LOOP_MS`
+(`src/lib/ringtone.ts`) permet aux vibrations de tomber sur chaque salve.
+
+Sur Android, où l'`overscroll` n'est qu'un effet visuel, le repli est de
+rafraîchir trois fois en moins de huit secondes.
 
 ## Contenu
 
@@ -72,17 +101,37 @@ npm start        # démarre Metro, puis scanner le QR code avec Expo Go
 ```
 App.tsx                    Coquille : chargement des fontes Spectral, état des onglets, barre flottante
 src/theme.ts               Tokens design (couleurs, fontes, gabarit) extraits de la maquette
-src/data/content.ts        Contenu du jour (codé en dur)
+src/data/content.ts        Fallback embarqué + types du flux
+src/data/remote.ts         Relève de latest.json et des leçons d'archive
 src/components/
   Header.tsx               Masthead centré PROJECT / ENM
   EssentielCard.tsx        Carte marine « L'essentiel du jour »
   RubriqueCard.tsx         Carte blanche à chip colorée
-  TabBar.tsx               Barre d'onglets flottante
+  TabBar.tsx               Barre d'onglets flottante (pastille glissante)
+  ToggleButton.tsx         Bouton « ouvrir / réduire » partagé Terme + Astro
+  Press.tsx                Surface qui s'enfonce sous le doigt
+  FadeIn.tsx               Entrée en fondu, décalable
+  IncomingCall.tsx         Easter egg : l'écran d'appel entrant
   icons.tsx                Icônes SVG (page journal, balance de justice)
+src/hooks/
+  useLongPullEasterEgg.ts  Le tirage long qui déclenche l'appel
+  useReduceMotion.ts       Réglage système « Réduire les animations »
+src/lib/
+  haptics.ts               Vocabulaire haptique de l'app
+  ringtone.ts              Lecture en boucle de la sonnerie
 src/screens/
   JournalScreen.tsx        Écran 1
   TermeScreen.tsx          Écran 2 (fiche dépliable)
+  AstroScreen.tsx          Écran 3 (leçon du jour + sommaire des archives)
+assets/ringtone.mp3        Sonnerie de l'appel entrant
+tools/make-ringtone.py     Générateur de cette sonnerie
 ```
+
+> L'ajout d'`expo-audio` est un module natif : Expo Go ne suffit plus pour
+> entendre la sonnerie, il faut un build de développement ou une build EAS.
+> C'est pourquoi `app.json` passe en `1.2.0` — `runtimeVersion` suit
+> `appVersion`, et une mise à jour OTA ne doit pas atterrir sur un binaire qui
+> ne contient pas le module.
 
 ## Vérification
 

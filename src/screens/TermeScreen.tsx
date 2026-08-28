@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { Header } from '../components/Header';
 import { FadeIn } from '../components/FadeIn';
-import { light } from '../lib/haptics';
+import { ToggleButton } from '../components/ToggleButton';
 import { colors, fonts } from '../theme';
 import type { Mot } from '../data/content';
 
@@ -33,18 +33,12 @@ export function TermeScreen({ mot }: { mot: Mot }) {
         </View>
       </FadeIn>
 
-      <Pressable
-        style={styles.button}
-        onPress={() => {
-          light();
-          setFicheOpen((v) => !v);
-        }}
-      >
-        <Text style={styles.buttonSign}>{ficheOpen ? '–' : '+'}</Text>
-        <Text style={styles.buttonLabel}>
-          {ficheOpen ? 'Réduire la fiche' : 'Ouvrir la fiche complète'}
-        </Text>
-      </Pressable>
+      <ToggleButton
+        open={ficheOpen}
+        style={styles.toggle}
+        label={ficheOpen ? 'Réduire la fiche' : 'Ouvrir la fiche complète'}
+        onPress={() => setFicheOpen((v) => !v)}
+      />
 
       {ficheOpen && (
         <View style={styles.fiche}>
@@ -123,36 +117,7 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     color: colors.inkSoft,
   },
-  button: {
-    width: '100%',
-    marginTop: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    backgroundColor: colors.cardBg,
-    borderWidth: 1,
-    borderColor: '#cdd6e2',
-    borderRadius: 14,
-    padding: 14,
-    shadowColor: '#282112',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4.5,
-    elevation: 1,
-  },
-  buttonSign: {
-    fontFamily: fonts.regular,
-    fontSize: 19,
-    lineHeight: 19,
-    color: colors.navy,
-  },
-  buttonLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    letterSpacing: 0.3,
-    color: colors.navy,
-  },
+  toggle: { marginTop: 14 },
   fiche: {
     marginTop: 14,
     gap: 11,

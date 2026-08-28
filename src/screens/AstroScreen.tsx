@@ -3,7 +3,9 @@ import { ScrollView, View, Text, Pressable, ActivityIndicator, StyleSheet } from
 import { Header } from '../components/Header';
 import { colors, fonts } from '../theme';
 import { FadeIn } from '../components/FadeIn';
-import { light, tap } from '../lib/haptics';
+import { PressableScale } from '../components/Press';
+import { ToggleButton } from '../components/ToggleButton';
+import { failure, soft, success, tap } from '../lib/haptics';
 import { fetchAstroIndex, fetchAstroLesson } from '../data/remote';
 import type { AstroIndexEntry, AstroLesson } from '../data/content';
 
@@ -49,9 +51,11 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
       const l = await fetchAstroLesson(entry.file);
       setLoadingN(null);
       if (!l) {
+        failure();
         setFailed(true);
         return;
       }
+      success(); // la leçon est là : la même boucle que la relève du Journal
       setArchive(l);
       scroll.current?.scrollTo({ y: 0, animated: false });
     },
@@ -59,6 +63,7 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
   );
 
   const backToToday = useCallback(() => {
+    soft();
     setArchive(null);
     setFailed(false);
     scroll.current?.scrollTo({ y: 0, animated: false });
@@ -99,46 +104,54 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
       </FadeIn>
 
       {!!archive && lesson && archive.n !== lesson.n && (
-        <Pressable style={styles.banner} onPress={backToToday}>
+        <PressableScale
+          wrapperStyle={styles.spaced}
+          style={styles.banner}
+          onPress={backToToday}
+          haptic="none"
+          scaleTo={0.975}
+          accessibilityRole="button"
+        >
           <Text style={styles.bannerText}>
             Leçon passée — revenir à la leçon du jour (n° {lesson.n})
           </Text>
-        </Pressable>
+        </PressableScale>
       )}
 
       {!!index && index.length > 1 && (
         <>
-          <Pressable
-            style={styles.button}
-            onPress={() => {
-              light();
-              setTocOpen((v) => !v);
-            }}
-          >
-            <Text style={styles.buttonSign}>{tocOpen ? '–' : '+'}</Text>
-            <Text style={styles.buttonLabel}>
-              {tocOpen ? 'Fermer le sommaire' : `Leçons précédentes (${index.length})`}
-            </Text>
-          </Pressable>
+          <ToggleButton
+            open={tocOpen}
+            style={styles.spaced}
+            label={tocOpen ? 'Fermer le sommaire' : `Leçons précédentes (${index.length})`}
+            onPress={() => setTocOpen((v) => !v)}
+          />
 
           {tocOpen && (
             <View style={[styles.card, styles.spaced]}>
               {index.map((entry, i) => {
                 const current = entry.n === shown.n;
                 return (
-                  <Pressable
-                    key={entry.n}
-                    onPress={() => open(entry)}
-                    style={i === 0 ? styles.tocRow : [styles.tocRow, styles.tocRowBorder]}
-                  >
-                    <Text style={[styles.tocN, current && styles.tocCurrent]}>
-                      {String(entry.n).padStart(2, '0')}
-                    </Text>
-                    <Text style={[styles.tocTitle, current && styles.tocCurrent]} numberOfLines={2}>
-                      {entry.title}
-                    </Text>
-                    {loadingN === entry.n && <ActivityIndicator size="small" color={colors.navy} />}
-                  </Pressable>
+                  // Le sommaire se déroule ligne à ligne, comme une liste qu'on
+                  // parcourt — 28 ms suffisent, au-delà l'ouverture traîne.
+                  <FadeIn key={entry.n} delay={i * 28} duration={260} distance={8}>
+                    <Pressable
+                      onPress={() => open(entry)}
+                      style={({ pressed }) => [
+                        styles.tocRow,
+                        i > 0 && styles.tocRowBorder,
+                        pressed && styles.tocRowPressed,
+                      ]}
+                    >
+                      <Text style={[styles.tocN, current && styles.tocCurrent]}>
+                        {String(entry.n).padStart(2, '0')}
+                      </Text>
+                      <Text style={[styles.tocTitle, current && styles.tocCurrent]} numberOfLines={2}>
+                        {entry.title}
+                      </Text>
+                      {loadingN === entry.n && <ActivityIndicator size="small" color={colors.navy} />}
+                    </Pressable>
+                  </FadeIn>
                 );
               })}
             </View>
@@ -328,32 +341,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.onNavy,
   },
-  button: {
-    width: '100%',
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    backgroundColor: colors.cardBg,
-    borderWidth: 1,
-    borderColor: '#cdd6e2',
-    borderRadius: 14,
-    padding: 14,
-    ...cardShadow,
-  },
-  buttonSign: {
-    fontFamily: fonts.regular,
-    fontSize: 19,
-    lineHeight: 19,
-    color: colors.navy,
-  },
-  buttonLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    letterSpacing: 0.3,
-    color: colors.navy,
-  },
   tocRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -378,8 +365,10 @@ const styles = StyleSheet.create({
     color: colors.inkSoft,
   },
   tocCurrent: { color: colors.navy },
+  // La ligne s'éclaire sous le doigt : dans une liste dense, l'enfoncement
+  // d'une carte entière serait illisible.
+  tocRowPressed: { backgroundColor: '#f1eee5', borderRadius: 8 },
   banner: {
-    marginTop: 12,
     backgroundColor: colors.cardBg,
     borderWidth: 1,
     borderColor: '#cdd6e2',

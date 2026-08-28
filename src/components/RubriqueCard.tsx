@@ -1,32 +1,43 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
+import { PressableScale } from './Press';
 import type { Rubrique } from '../data/content';
 
-/** White card for one rubrique: a colour-tinted category chip, a tappable title,
- *  a one-line summary, and a source row with a round ↗ button. */
+/** White card for one rubrique: a colour-tinted category chip, a title, a
+ *  one-line summary, and a source row with a round ↗ button.
+ *
+ *  Toute la carte est la cible : viser le titre ou la flèche demandait de la
+ *  précision, et l'enfoncement d'ensemble dit mieux que la carte entière part
+ *  vers l'article. Le bouton rond reste, comme signe. */
 export function RubriqueCard({ data, onOpen }: { data: Rubrique; onOpen: (url: string) => void }) {
   return (
-    <View style={styles.card}>
-      <View style={[styles.chip, { backgroundColor: data.tint }]}>
-        <Text style={[styles.chipText, { color: data.ink }]}>{data.chip}</Text>
-      </View>
+    <PressableScale
+      onPress={() => onOpen(data.url)}
+      style={styles.card}
+      haptic="light"
+      accessibilityRole="link"
+      accessibilityLabel={`${data.chip} — ${data.title}`}
+    >
+      {({ pressed }) => (
+        <>
+          <View style={[styles.chip, { backgroundColor: data.tint }]}>
+            <Text style={[styles.chipText, { color: data.ink }]}>{data.chip}</Text>
+          </View>
 
-      <Pressable onPress={() => onOpen(data.url)}>
-        {({ pressed }) => (
           <Text style={[styles.title, pressed && styles.titlePressed]}>{data.title}</Text>
-        )}
-      </Pressable>
 
-      <Text style={styles.summary}>{data.summary}</Text>
+          <Text style={styles.summary}>{data.summary}</Text>
 
-      <View style={styles.footer}>
-        <Text style={styles.source}>{data.source}</Text>
-        <Pressable onPress={() => onOpen(data.url)} style={styles.arrowBtn} hitSlop={8}>
-          <Text style={styles.arrow}>↗</Text>
-        </Pressable>
-      </View>
-    </View>
+          <View style={styles.footer}>
+            <Text style={styles.source}>{data.source}</Text>
+            <View style={[styles.arrowBtn, pressed && styles.arrowBtnPressed]}>
+              <Text style={[styles.arrow, pressed && styles.arrowPressed]}>↗</Text>
+            </View>
+          </View>
+        </>
+      )}
+    </PressableScale>
   );
 }
 
@@ -92,5 +103,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  arrowBtnPressed: { backgroundColor: colors.navy },
   arrow: { fontSize: 13, color: colors.navy },
+  arrowPressed: { color: colors.cardBg },
 });

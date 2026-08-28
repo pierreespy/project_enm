@@ -1,13 +1,21 @@
 import React from 'react';
-import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
+import { PressableScale } from './Press';
 import type { Essentiel } from '../data/content';
 
 /** Navy "L'essentiel du jour" hero card — the single featured story. Tapping
- *  anywhere opens the source article. */
+ *  anywhere opens the source article. C'est la carte la plus grande de l'app :
+ *  elle s'enfonce un peu plus que les autres, sinon le geste ne se voit pas. */
 export function EssentielCard({ data, onOpen }: { data: Essentiel; onOpen: (url: string) => void }) {
   return (
-    <Pressable onPress={() => onOpen(data.url)} style={styles.card}>
+    <PressableScale
+      onPress={() => onOpen(data.url)}
+      style={styles.card}
+      scaleTo={0.96}
+      haptic="light"
+      accessibilityRole="link"
+    >
       {({ pressed }) => (
         <>
           <Text style={styles.label}>{data.label}</Text>
@@ -15,11 +23,11 @@ export function EssentielCard({ data, onOpen }: { data: Essentiel; onOpen: (url:
           <Text style={styles.dek}>{data.dek}</Text>
           <View style={styles.sourceRow}>
             <Text style={styles.source}>{data.source}</Text>
-            <Text style={styles.arrow}>↗</Text>
+            <Text style={[styles.arrow, pressed && styles.titlePressed]}>↗</Text>
           </View>
         </>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 

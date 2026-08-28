@@ -4,7 +4,9 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Path } from 'react-native-svg';
-import { heavy, medium, success } from '../lib/haptics';
+import { medium, soft, success, ringPulse } from '../lib/haptics';
+import { RING_LOOP_MS, useRingtone } from '../lib/ringtone';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 
 const PHOTO = require('../../assets/john-pork.png');
 
@@ -28,18 +30,38 @@ function PhoneIcon({ size = 32 }: { size?: number }) {
   );
 }
 
+/** mm:ss — la durée d'appel, comme sur l'écran d'appel du téléphone. */
+function clock(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 /**
  * Easter egg — l'écran d'appel entrant, ouvert quand on tire longtemps le
  * Journal depuis le haut (voir hooks/useLongPullEasterEgg).
  *
- * Refuser ferme. Accepter passe sur un écran « appel en cours » qui raccroche
- * de lui-même. Pour changer d'appelant : remplacer assets/john-pork.png — et
- * si le cadrage des boutons diffère, ajuster les constantes ci-dessus.
+ * Ça sonne pour de bon (assets/ringtone.mp3), ça vibre en cadence, et la photo
+ * tressaute à chaque salve. Refuser ferme. Accepter passe sur un écran « appel
+ * en cours » qui raccroche de lui-même. Pour changer d'appelant : remplacer
+ * assets/john-pork.png — et si le cadrage des boutons diffère, ajuster les
+ * constantes ci-dessus.
  */
 export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismiss: () => void }) {
   const { width, height } = useWindowDimensions();
   const [answered, setAnswered] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const entrance = useRef(new Animated.Value(0)).current;
+  // Une valeur par effet, sinon les animations se voleraient la piste.
+  const shake = useRef(new Animated.Value(0)).current;   // le tressautement
+  const halo = useRef(new Animated.Value(0)).current;    // l'auréole du bouton vert
+  const inCall = useRef(new Animated.Value(0)).current;  // l'écran « en cours »
+
+  const ringing = visible && !answered;
+  useRingtone(ringing);
+  // « Réduire les animations » coupe le tressautement et l'auréole ; la
+  // sonnerie et les vibrations, elles, restent — c'est tout l'easter egg.
+  const still = useReduceMotion() === true;
 
   // La photo est affichée en entier (jamais rognée) : les zones tactiles
   // restent alignées sur les boutons quel que soit le format de l'écran.
@@ -60,36 +82,101 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
     const t = setTimeout(() => {
       setAnswered(false);
       onDismiss();
-    }, 2600);
+    }, 8000);
     return () => clearTimeout(t);
   }, [answered, onDismiss]);
 
-  // L'écran arrive comme un appel : un léger zoom arrière, et ça sonne.
+  // L'écran arrive comme un appel : il monte d'un cran, dézoome, et ça sonne.
   useEffect(() => {
     if (!visible) {
       entrance.setValue(0);
       return;
     }
-    Animated.timing(entrance, {
+    if (still) {
+      entrance.setValue(1);
+      return;
+    }
+    Animated.spring(entrance, {
       toValue: 1,
-      duration: 280,
-      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
+      speed: 14,
+      bounciness: 7,
     }).start();
-  }, [entrance, visible]);
+  }, [entrance, still, visible]);
 
-  // Sonnerie haptique : deux coups rapprochés, puis silence — la cadence d'un
-  // téléphone. Elle s'arrête dès que l'appel est pris ou refusé.
+  // Une salve : la photo tressaute latéralement (comme un téléphone posé sur
+  // une table), l'auréole du bouton vert enfle, et ça vibre deux fois.
   useEffect(() => {
-    if (!visible || answered) return;
-    const ring = () => {
-      heavy();
-      setTimeout(heavy, 140);
+    if (!ringing) return;
+
+    const jolt = () => {
+      if (still) return;
+      shake.setValue(0);
+      Animated.sequence([
+        Animated.timing(shake, { toValue: 1, duration: 60, useNativeDriver: true }),
+        Animated.timing(shake, { toValue: -1, duration: 70, useNativeDriver: true }),
+        Animated.timing(shake, { toValue: 0.6, duration: 70, useNativeDriver: true }),
+        Animated.spring(shake, { toValue: 0, useNativeDriver: true, speed: 20, bounciness: 12 }),
+      ]).start();
     };
-    ring();
-    const id = setInterval(ring, 1600);
+
+    let cancelHaptics = () => {};
+    const salvo = () => {
+      cancelHaptics();
+      cancelHaptics = ringPulse();
+      jolt();
+    };
+
+    salvo();
+    const id = setInterval(salvo, RING_LOOP_MS);
+    return () => {
+      clearInterval(id);
+      cancelHaptics();
+      shake.stopAnimation(() => shake.setValue(0));
+    };
+  }, [ringing, shake, still]);
+
+  // L'auréole respire en continu tant que ça sonne : « décroche ici ».
+  useEffect(() => {
+    if (!ringing || still) {
+      halo.setValue(0);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(halo, {
+          toValue: 1,
+          duration: 1100,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(halo, { toValue: 0, duration: 0, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [halo, ringing, still]);
+
+  // L'écran « appel en cours » se pose en fondu, et le compteur tourne.
+  useEffect(() => {
+    if (!answered) {
+      inCall.setValue(0);
+      setElapsed(0);
+      return;
+    }
+    if (still) {
+      inCall.setValue(1);
+    } else {
+      Animated.timing(inCall, {
+        toValue: 1,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    }
+    const id = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(id);
-  }, [answered, visible]);
+  }, [answered, inCall, still]);
 
   useEffect(() => {
     if (!visible) setAnswered(false);
@@ -97,6 +184,8 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
 
   const hangUp = () => {
     medium();
+    // Le petit contrecoup mat d'une ligne qui se coupe.
+    setTimeout(soft, 90);
     setAnswered(false);
     onDismiss();
   };
@@ -121,14 +210,46 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
             height: boxH,
             opacity: entrance,
             transform: [
-              { scale: entrance.interpolate({ inputRange: [0, 1], outputRange: [1.05, 1] }) },
+              { translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-7, 7] }) },
+              {
+                rotate: shake.interpolate({
+                  inputRange: [-1, 1],
+                  outputRange: ['-0.8deg', '0.8deg'],
+                }),
+              },
+              { scale: entrance.interpolate({ inputRange: [0, 1], outputRange: [1.08, 1] }) },
+              {
+                translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [26, 0] }),
+              },
             ],
           }}
         >
           <Image source={PHOTO} style={styles.photo} resizeMode="contain" />
 
-          {!answered && (
+          {ringing && (
             <>
+              {/* Onde qui s'échappe du bouton vert — purement décorative, et
+                  posée sous les zones tactiles pour ne pas les intercepter. */}
+              {!still && (
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    zone(ACCEPT_X),
+                    styles.halo,
+                    {
+                      opacity: halo.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }),
+                      transform: [
+                        {
+                          scale: halo.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.72, 1.35],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              )}
               <Pressable
                 style={zone(DECLINE_X)}
                 onPress={hangUp}
@@ -146,9 +267,19 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
         </Animated.View>
 
         {answered && (
-          <View style={styles.inCall}>
+          <Animated.View
+            style={[
+              styles.inCall,
+              {
+                opacity: inCall,
+                transform: [
+                  { scale: inCall.interpolate({ inputRange: [0, 1], outputRange: [1.06, 1] }) },
+                ],
+              },
+            ]}
+          >
             <Text style={styles.name}>John Pork</Text>
-            <Text style={styles.status}>Appel en cours…</Text>
+            <Text style={styles.status}>{clock(elapsed)}</Text>
             <Pressable
               style={styles.hangUp}
               onPress={hangUp}
@@ -157,7 +288,7 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
             >
               <PhoneIcon />
             </Pressable>
-          </View>
+          </Animated.View>
         )}
       </View>
     </Modal>
@@ -167,6 +298,7 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' },
   photo: { width: '100%', height: '100%' },
+  halo: { backgroundColor: '#34c759' },
   // Écran « appel en cours » : un voile sur la photo, pour ne pas laisser
   // cohabiter « est en train d'appeler… » (dessiné dans l'image) avec l'appel pris.
   inCall: {
@@ -177,7 +309,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   name: { fontSize: 40, fontWeight: '600', color: '#fff' },
-  status: { fontSize: 20, color: 'rgba(255,255,255,0.85)', marginBottom: 44 },
+  status: {
+    fontSize: 20,
+    color: 'rgba(255,255,255,0.85)',
+    marginBottom: 44,
+    fontVariant: ['tabular-nums'],
+  },
   hangUp: {
     width: 78,
     height: 78,
