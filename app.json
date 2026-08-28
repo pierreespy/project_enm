@@ -8,6 +8,7 @@
     "userInterfaceStyle": "light",
     "backgroundColor": "#f4f1ea",
     "ios": {
+      "bundleIdentifier": "com.pierreespy.projectenm",
       "supportsTablet": false
     },
     "android": {
