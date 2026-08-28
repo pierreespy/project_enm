@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { Header } from '../components/Header';
 import { colors, fonts } from '../theme';
+import { FadeIn } from '../components/FadeIn';
+import { light, tap } from '../lib/haptics';
 import { fetchAstroIndex, fetchAstroLesson } from '../data/remote';
 import type { AstroIndexEntry, AstroLesson } from '../data/content';
 
@@ -34,6 +36,7 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
 
   const open = useCallback(
     async (entry: AstroIndexEntry) => {
+      tap();
       setTocOpen(false);
       setFailed(false);
       // La leçon du jour est déjà en mémoire — inutile de la retélécharger.
@@ -84,14 +87,16 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
     >
       <Header cornerLabel={`Leçon ${shown.n}`} />
 
-      <View style={styles.hero}>
-        <Text style={styles.heroLabel}>
+      <FadeIn>
+        <View style={styles.hero}>
+          <Text style={styles.heroLabel}>
           Cours d’astrophysique · Leçon {shown.n}
-          {shown.duration ? ` · ${shown.duration}` : ''}
-        </Text>
-        <Text style={styles.title}>{shown.title}</Text>
-        <Text style={styles.subtitle}>{shown.subtitle}</Text>
-      </View>
+            {shown.duration ? ` · ${shown.duration}` : ''}
+          </Text>
+          <Text style={styles.title}>{shown.title}</Text>
+          <Text style={styles.subtitle}>{shown.subtitle}</Text>
+        </View>
+      </FadeIn>
 
       {!!archive && lesson && archive.n !== lesson.n && (
         <Pressable style={styles.banner} onPress={backToToday}>
@@ -103,7 +108,13 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
 
       {!!index && index.length > 1 && (
         <>
-          <Pressable style={styles.button} onPress={() => setTocOpen((v) => !v)}>
+          <Pressable
+            style={styles.button}
+            onPress={() => {
+              light();
+              setTocOpen((v) => !v);
+            }}
+          >
             <Text style={styles.buttonSign}>{tocOpen ? '–' : '+'}</Text>
             <Text style={styles.buttonLabel}>
               {tocOpen ? 'Fermer le sommaire' : `Leçons précédentes (${index.length})`}
@@ -152,10 +163,12 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
 
       <View style={styles.list}>
         {shown.sections.map((s, i) => (
-          <View key={i} style={styles.card}>
-            <Text style={styles.cardTitle}>{s.h}</Text>
-            <Text style={styles.body}>{s.body}</Text>
-          </View>
+          <FadeIn key={`${shown.n}-${i}`} delay={80 + i * 70}>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>{s.h}</Text>
+              <Text style={styles.body}>{s.body}</Text>
+            </View>
+          </FadeIn>
         ))}
       </View>
 
@@ -171,10 +184,12 @@ export function AstroScreen({ lesson }: { lesson?: AstroLesson }) {
         </View>
       )}
 
-      <View style={styles.recapCard}>
-        <Text style={styles.recapLabel}>En trois lignes</Text>
-        <Text style={styles.recap}>{shown.recap}</Text>
-      </View>
+      <FadeIn delay={80 + shown.sections.length * 70}>
+        <View style={styles.recapCard}>
+          <Text style={styles.recapLabel}>En trois lignes</Text>
+          <Text style={styles.recap}>{shown.recap}</Text>
+        </View>
+      </FadeIn>
 
       {!!shown.next && !archive && <Text style={styles.next}>{shown.next}</Text>}
     </ScrollView>

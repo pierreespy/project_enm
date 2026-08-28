@@ -11,6 +11,8 @@ import {
 } from '@expo-google-fonts/spectral';
 
 import { colors } from './src/theme';
+import { FadeIn } from './src/components/FadeIn';
+import { light } from './src/lib/haptics';
 import { TabBar, type Tab } from './src/components/TabBar';
 import { JournalScreen } from './src/screens/JournalScreen';
 import { TermeScreen } from './src/screens/TermeScreen';
@@ -63,6 +65,7 @@ export default function App() {
   }, []);
 
   const openUrl = useCallback((url: string) => {
+    light();
     Linking.openURL(url).catch(() => {});
   }, []);
 
@@ -73,11 +76,15 @@ export default function App() {
   return (
     <View style={styles.root}>
       <StatusBar style="dark" />
-      {tab === 'journal' && (
-        <JournalScreen content={content} onOpen={openUrl} onRefresh={refreshContent} />
-      )}
-      {tab === 'terme' && <TermeScreen mot={content.mot} />}
-      {tab === 'astro' && <AstroScreen lesson={content.astro} />}
+      {/* La clé change avec l'onglet : chaque écran entre en fondu au lieu
+          d'apparaître d'un bloc. */}
+      <FadeIn key={tab} style={styles.screen} duration={260} distance={8}>
+        {tab === 'journal' && (
+          <JournalScreen content={content} onOpen={openUrl} onRefresh={refreshContent} />
+        )}
+        {tab === 'terme' && <TermeScreen mot={content.mot} />}
+        {tab === 'astro' && <AstroScreen lesson={content.astro} />}
+      </FadeIn>
       <TabBar tab={tab} onChange={setTab} />
     </View>
   );
@@ -88,4 +95,5 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.paper,
   },
+  screen: { flex: 1 },
 });

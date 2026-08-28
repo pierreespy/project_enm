@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  Modal, View, Text, Image, Pressable, StyleSheet, useWindowDimensions,
+  Animated, Easing, Modal, View, Text, Image, Pressable, StyleSheet, useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Path } from 'react-native-svg';
+import { heavy, medium, success } from '../lib/haptics';
 
 const PHOTO = require('../../assets/john-pork.png');
 
@@ -38,6 +39,7 @@ function PhoneIcon({ size = 32 }: { size?: number }) {
 export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismiss: () => void }) {
   const { width, height } = useWindowDimensions();
   const [answered, setAnswered] = useState(false);
+  const entrance = useRef(new Animated.Value(0)).current;
 
   // La photo est affichée en entier (jamais rognée) : les zones tactiles
   // restent alignées sur les boutons quel que soit le format de l'écran.
@@ -62,13 +64,46 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
     return () => clearTimeout(t);
   }, [answered, onDismiss]);
 
+  // L'écran arrive comme un appel : un léger zoom arrière, et ça sonne.
+  useEffect(() => {
+    if (!visible) {
+      entrance.setValue(0);
+      return;
+    }
+    Animated.timing(entrance, {
+      toValue: 1,
+      duration: 280,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [entrance, visible]);
+
+  // Sonnerie haptique : deux coups rapprochés, puis silence — la cadence d'un
+  // téléphone. Elle s'arrête dès que l'appel est pris ou refusé.
+  useEffect(() => {
+    if (!visible || answered) return;
+    const ring = () => {
+      heavy();
+      setTimeout(heavy, 140);
+    };
+    ring();
+    const id = setInterval(ring, 1600);
+    return () => clearInterval(id);
+  }, [answered, visible]);
+
   useEffect(() => {
     if (!visible) setAnswered(false);
   }, [visible]);
 
   const hangUp = () => {
+    medium();
     setAnswered(false);
     onDismiss();
+  };
+
+  const answer = () => {
+    success();
+    setAnswered(true);
   };
 
   return (
@@ -80,7 +115,16 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
     >
       <View style={styles.root}>
         <StatusBar style="light" />
-        <View style={{ width: boxW, height: boxH }}>
+        <Animated.View
+          style={{
+            width: boxW,
+            height: boxH,
+            opacity: entrance,
+            transform: [
+              { scale: entrance.interpolate({ inputRange: [0, 1], outputRange: [1.05, 1] }) },
+            ],
+          }}
+        >
           <Image source={PHOTO} style={styles.photo} resizeMode="contain" />
 
           {!answered && (
@@ -93,13 +137,13 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
               />
               <Pressable
                 style={zone(ACCEPT_X)}
-                onPress={() => setAnswered(true)}
+                onPress={answer}
                 accessibilityRole="button"
                 accessibilityLabel="Accepter l’appel"
               />
             </>
           )}
-        </View>
+        </Animated.View>
 
         {answered && (
           <View style={styles.inCall}>

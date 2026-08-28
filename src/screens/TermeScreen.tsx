@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
 import { Header } from '../components/Header';
+import { FadeIn } from '../components/FadeIn';
+import { light } from '../lib/haptics';
 import { colors, fonts } from '../theme';
 import type { Mot } from '../data/content';
 
@@ -17,17 +19,27 @@ export function TermeScreen({ mot }: { mot: Mot }) {
     >
       <Header cornerLabel="Terme" />
 
-      <View style={styles.hero}>
-        <Text style={styles.heroLabel}>{mot.label}</Text>
-        <Text style={styles.term}>{mot.term}</Text>
-        <Text style={styles.subtitle}>{mot.subtitle}</Text>
-      </View>
+      <FadeIn>
+        <View style={styles.hero}>
+          <Text style={styles.heroLabel}>{mot.label}</Text>
+          <Text style={styles.term}>{mot.term}</Text>
+          <Text style={styles.subtitle}>{mot.subtitle}</Text>
+        </View>
+      </FadeIn>
 
-      <View style={styles.defCard}>
-        <Text style={styles.defShort}>{mot.defShort}</Text>
-      </View>
+      <FadeIn delay={90}>
+        <View style={styles.defCard}>
+          <Text style={styles.defShort}>{mot.defShort}</Text>
+        </View>
+      </FadeIn>
 
-      <Pressable style={styles.button} onPress={() => setFicheOpen((v) => !v)}>
+      <Pressable
+        style={styles.button}
+        onPress={() => {
+          light();
+          setFicheOpen((v) => !v);
+        }}
+      >
         <Text style={styles.buttonSign}>{ficheOpen ? '–' : '+'}</Text>
         <Text style={styles.buttonLabel}>
           {ficheOpen ? 'Réduire la fiche' : 'Ouvrir la fiche complète'}
@@ -37,12 +49,16 @@ export function TermeScreen({ mot }: { mot: Mot }) {
       {ficheOpen && (
         <View style={styles.fiche}>
           {mot.fiche.map((f, i) => (
-            <View key={i} style={styles.ficheCard}>
-              <Text style={styles.ficheH}>{f.h}</Text>
-              <Text style={styles.ficheBody}>{f.body}</Text>
-            </View>
+            <FadeIn key={i} delay={i * 55} duration={320}>
+              <View style={styles.ficheCard}>
+                <Text style={styles.ficheH}>{f.h}</Text>
+                <Text style={styles.ficheBody}>{f.body}</Text>
+              </View>
+            </FadeIn>
           ))}
-          <Text style={styles.seeAlso}>{mot.seeAlso}</Text>
+          <FadeIn delay={mot.fiche.length * 55} duration={320}>
+            <Text style={styles.seeAlso}>{mot.seeAlso}</Text>
+          </FadeIn>
         </View>
       )}
     </ScrollView>

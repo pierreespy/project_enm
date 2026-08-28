@@ -24,6 +24,11 @@ Parti pris repris fidèlement de la maquette : **papier crème éditorial**, acc
   l'annonce de la leçon du lendemain. Un sommaire dépliable donne accès à
   **toutes les leçons passées**.
 
+Toutes les cartes entrent en fondu, décalées les unes des autres dans l'ordre de
+lecture (`src/components/FadeIn.tsx`, qui respecte le réglage système « Réduire
+les animations »), et les gestes sont soulignés par un retour haptique au
+vocabulaire volontairement court (`src/lib/haptics.ts`).
+
 Barre d'onglets flottante (pilule marine) : **Journal** (icône page), **Terme du
 jour** (icône **balance de la justice**) et **Astrophysique** (icône planète).
 

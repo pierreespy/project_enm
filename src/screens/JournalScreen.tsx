@@ -4,6 +4,8 @@ import { Header } from '../components/Header';
 import { EssentielCard } from '../components/EssentielCard';
 import { RubriqueCard } from '../components/RubriqueCard';
 import { IncomingCall } from '../components/IncomingCall';
+import { FadeIn } from '../components/FadeIn';
+import { medium, success } from '../lib/haptics';
 import { useLongPullEasterEgg } from '../hooks/useLongPullEasterEgg';
 import { colors } from '../theme';
 import type { DailyContent } from '../data/content';
@@ -30,10 +32,12 @@ export function JournalScreen({
 
   const handleRefresh = useCallback(async () => {
     onRefreshTriggered();
+    medium();
     if (!onRefresh) return;
     setRefreshing(true);
     try {
       await onRefresh();
+      success(); // le contenu est relevé : la boucle se referme sous le doigt
     } finally {
       setRefreshing(false);
     }
@@ -62,11 +66,16 @@ export function JournalScreen({
           }
         />
 
-        <EssentielCard data={content.essentiel} onOpen={onOpen} />
+        <FadeIn>
+          <EssentielCard data={content.essentiel} onOpen={onOpen} />
+        </FadeIn>
 
         <View style={styles.list}>
           {content.rubriques.map((r, i) => (
-            <RubriqueCard key={i} data={r} onOpen={onOpen} />
+            // Cascade de 60 ms : les rubriques se posent dans l'ordre de lecture.
+            <FadeIn key={i} delay={80 + i * 60}>
+              <RubriqueCard data={r} onOpen={onOpen} />
+            </FadeIn>
           ))}
         </View>
       </ScrollView>

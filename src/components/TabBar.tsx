@@ -1,34 +1,78 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
 import { JournalIcon, ScaleIcon, AstroIcon } from './icons';
+import { tap } from '../lib/haptics';
 
 export type Tab = 'journal' | 'terme' | 'astro';
 
 /** Floating navy pill tab bar with the active tab in full white and the others
  *  dimmed. Trois onglets : Journal (page), Terme du jour (balance) et
  *  Astrophysique (planète) — le cours quotidien. */
+/** Un onglet. L'icône active grossit légèrement — assez pour marquer la
+ *  sélection, trop peu pour attirer l'œil pendant la lecture. */
+function TabButton({
+  active,
+  label,
+  icon,
+  onPress,
+}: {
+  active: boolean;
+  label: string;
+  icon: (color: string) => React.ReactNode;
+  onPress: () => void;
+}) {
+  const anim = useRef(new Animated.Value(active ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(anim, {
+      toValue: active ? 1 : 0,
+      useNativeDriver: true,
+      speed: 18,
+      bounciness: 6,
+    }).start();
+  }, [active, anim]);
+
+  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.14] });
+  const color = active ? colors.tabActive : colors.tabInactive;
+
+  return (
+    <Pressable style={styles.btn} onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: active }}>
+      <Animated.View style={{ transform: [{ scale }] }}>{icon(color)}</Animated.View>
+      <Text style={[styles.label, { color }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
+  // Le retour haptique n'a lieu que sur un vrai changement : retaper l'onglet
+  // courant ne doit rien produire.
+  const select = (next: Tab) => {
+    if (next === tab) return;
+    tap();
+    onChange(next);
+  };
+
   return (
     <View style={styles.bar}>
-      <Pressable style={styles.btn} onPress={() => onChange('journal')}>
-        <JournalIcon color={tab === 'journal' ? colors.tabActive : colors.tabInactive} />
-        <Text style={[styles.label, { color: tab === 'journal' ? colors.tabActive : colors.tabInactive }]}>
-          Journal
-        </Text>
-      </Pressable>
-      <Pressable style={styles.btn} onPress={() => onChange('terme')}>
-        <ScaleIcon color={tab === 'terme' ? colors.tabActive : colors.tabInactive} />
-        <Text style={[styles.label, { color: tab === 'terme' ? colors.tabActive : colors.tabInactive }]}>
-          Terme du jour
-        </Text>
-      </Pressable>
-      <Pressable style={styles.btn} onPress={() => onChange('astro')}>
-        <AstroIcon color={tab === 'astro' ? colors.tabActive : colors.tabInactive} />
-        <Text style={[styles.label, { color: tab === 'astro' ? colors.tabActive : colors.tabInactive }]}>
-          Astrophysique
-        </Text>
-      </Pressable>
+      <TabButton
+        active={tab === 'journal'}
+        label="Journal"
+        icon={(c) => <JournalIcon color={c} />}
+        onPress={() => select('journal')}
+      />
+      <TabButton
+        active={tab === 'terme'}
+        label="Terme du jour"
+        icon={(c) => <ScaleIcon color={c} />}
+        onPress={() => select('terme')}
+      />
+      <TabButton
+        active={tab === 'astro'}
+        label="Astrophysique"
+        icon={(c) => <AstroIcon color={c} />}
+        onPress={() => select('astro')}
+      />
     </View>
   );
 }
