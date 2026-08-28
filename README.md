@@ -52,11 +52,18 @@ entrant** en plein écran : ça sonne, ça vibre en cadence, et la photo tressau
 à chaque salve. Refuser ferme, accepter passe sur un écran « appel en cours »
 avec compteur, qui raccroche de lui-même.
 
-La sonnerie (`assets/ringtone.mp3`) est une **composition maison** — un arpège de
-marimba synthétisé par [`tools/make-ringtone.py`](tools/make-ringtone.py) — et
-non une sonnerie système, qui ne pourrait pas être embarquée. Le fichier est une
-boucle exacte : la cadence est dans l'audio, et `RING_LOOP_MS`
-(`src/lib/ringtone.ts`) permet aux vibrations de tomber sur chaque salve.
+La sonnerie (`assets/ringtone.mp3`) est **jouée en entier, une seule fois** :
+elle démarre avec l'écran d'appel et se coupe net dès qu'on décroche ou qu'on
+refuse (`src/lib/ringtone.ts`). Si le morceau se termine sans réponse, l'appel
+reste à l'écran, silencieux mais toujours vibrant — la cadence des vibrations
+est indépendante de l'audio (`RING_PULSE_MS`, dans `IncomingCall.tsx`).
+**Changer de sonnerie = remplacer le fichier, rien d'autre**, sa durée n'entrant
+nulle part dans le code.
+
+Le fichier actuel est un **bouche-trou** : une composition maison — un arpège de
+marimba synthétisé par [`tools/make-ringtone.py`](tools/make-ringtone.py) —
+plutôt qu'une sonnerie système, qui ne pourrait pas être embarquée. Le jour où
+un vrai enregistrement le remplace, le générateur peut disparaître avec lui.
 
 Sur Android, où l'`overscroll` n'est qu'un effet visuel, le repli est de
 rafraîchir trois fois en moins de huit secondes.
@@ -124,7 +131,7 @@ src/screens/
   TermeScreen.tsx          Écran 2 (fiche dépliable)
   AstroScreen.tsx          Écran 3 (leçon du jour + sommaire des archives)
 assets/ringtone.mp3        Sonnerie de l'appel entrant
-tools/make-ringtone.py     Générateur de cette sonnerie
+tools/make-ringtone.py     Générateur de la sonnerie bouche-trou
 ```
 
 > L'ajout d'`expo-audio` est un module natif : Expo Go ne suffit plus pour

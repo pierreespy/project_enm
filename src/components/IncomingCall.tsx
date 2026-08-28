@@ -5,7 +5,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Path } from 'react-native-svg';
 import { medium, soft, success, ringPulse } from '../lib/haptics';
-import { RING_LOOP_MS, useRingtone } from '../lib/ringtone';
+import { useRingtone } from '../lib/ringtone';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 
 const PHOTO = require('../../assets/john-pork.png');
@@ -20,6 +20,12 @@ const DECLINE_X = 0.232;
 const ACCEPT_X = 0.762;
 const BUTTONS_Y = 0.786;
 const HIT_SIZE = 0.28; // en fraction de la largeur affichée
+
+// Cadence des vibrations, en millisecondes. Elle est fixée ici, indépendamment
+// de la sonnerie : le morceau est joué en entier, une fois, et rien ne dit qu'il
+// ait un rythme régulier — ni qu'il dure aussi longtemps que l'écran d'appel.
+// 3 s, c'est l'intervalle d'un téléphone qui insiste sans harceler.
+const RING_PULSE_MS = 3000;
 
 /** Combiné iOS — utilisé seulement par l'écran « appel en cours ». */
 function PhoneIcon({ size = 32 }: { size?: number }) {
@@ -41,11 +47,14 @@ function clock(seconds: number) {
  * Easter egg — l'écran d'appel entrant, ouvert quand on tire longtemps le
  * Journal depuis le haut (voir hooks/useLongPullEasterEgg).
  *
- * Ça sonne pour de bon (assets/ringtone.mp3), ça vibre en cadence, et la photo
- * tressaute à chaque salve. Refuser ferme. Accepter passe sur un écran « appel
- * en cours » qui raccroche de lui-même. Pour changer d'appelant : remplacer
- * assets/john-pork.png — et si le cadrage des boutons diffère, ajuster les
- * constantes ci-dessus.
+ * Ça sonne pour de bon — assets/ringtone.mp3 est joué en entier, une fois, et
+ * coupé net dès qu'on décroche ou qu'on refuse. Les vibrations et le
+ * tressautement de la photo, eux, continuent tant que l'écran est là : si le
+ * morceau se termine sans réponse, l'appel reste, silencieux mais insistant.
+ *
+ * Refuser ferme. Accepter passe sur un écran « appel en cours » qui raccroche
+ * de lui-même. Pour changer d'appelant : remplacer assets/john-pork.png — et si
+ * le cadrage des boutons diffère, ajuster les constantes ci-dessus.
  */
 export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismiss: () => void }) {
   const { width, height } = useWindowDimensions();
@@ -128,7 +137,7 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
     };
 
     salvo();
-    const id = setInterval(salvo, RING_LOOP_MS);
+    const id = setInterval(salvo, RING_PULSE_MS);
     return () => {
       clearInterval(id);
       cancelHaptics();

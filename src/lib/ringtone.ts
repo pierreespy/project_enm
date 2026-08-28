@@ -4,23 +4,14 @@ import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-aud
 const RINGTONE = require('../../assets/ringtone.mp3');
 
 /**
- * Durée d'une boucle de sonnerie, en millisecondes — c'est la cadence sur
- * laquelle l'écran d'appel cale ses vibrations et son tressautement.
- *
- * La valeur est celle du fichier **encodé** (3 605 ms), pas celle annoncée par
- * le générateur (3 570 ms) : le MP3 ajoute quelques dizaines de millisecondes
- * de silence à l'encodage. Si la sonnerie est regénérée, relever la durée avec
- * `ffprobe assets/ringtone.mp3` et reporter le chiffre ici.
- */
-export const RING_LOOP_MS = 3605;
-
-/**
  * La sonnerie de l'appel entrant.
  *
- * Le fichier est une composition maison (voir tools/make-ringtone.py) : un
- * arpège de marimba dans l'esprit d'une sonnerie de téléphone. Il contient déjà
- * sa propre cadence — deux salves puis un silence — et tourne en boucle, ce qui
- * évite de piloter le rythme depuis le JS.
+ * Le morceau est joué **en entier, une seule fois** : il commence quand l'écran
+ * d'appel apparaît et s'arrête net dès qu'on décroche ou qu'on refuse. Il n'est
+ * donc pas bouclé, et sa durée n'a pas besoin d'être connue du code — la
+ * cadence des vibrations, elle, est pilotée à part par l'écran d'appel.
+ *
+ * Remplacer la sonnerie = remplacer `assets/ringtone.mp3`, rien d'autre.
  *
  * Le lecteur est créé à la demande, à la première sonnerie, puis conservé :
  * l'app n'ouvre pas de session audio tant que l'easter egg dort.
@@ -31,7 +22,6 @@ function ensurePlayer(): AudioPlayer | null {
   if (player) return player;
   try {
     player = createAudioPlayer(RINGTONE);
-    player.loop = true;
     return player;
   } catch {
     // Pas de moteur audio (web restreint, appareil exotique) : l'appel se joue
@@ -63,6 +53,8 @@ export function useRingtone(active: boolean) {
         const p = ensurePlayer();
         if (!p) return;
         try {
+          // Rembobinage obligatoire : sans boucle, le lecteur reste sur la
+          // dernière image après un appel — le suivant serait muet.
           p.seekTo(0).catch(() => {});
           p.play();
         } catch {

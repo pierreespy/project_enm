@@ -6,11 +6,14 @@ C'est une composition originale : un arpège de marimba dans l'esprit d'une
 sonnerie de téléphone, synthétisé ici plutôt que repris d'un fichier système
 (les sonneries d'iOS sont protégées et ne peuvent pas être embarquées).
 
-Le fichier produit est une boucle exacte — une salve puis un silence — que le
-lecteur répète tel quel : la cadence « ça sonne, ça se tait, ça resonne » est
-donc dans l'audio. La durée de la boucle est affichée en fin d'exécution ; c'est
-elle que src/lib/ringtone.ts reprend dans RING_LOOP_MS pour que la vibration
-tombe pile sur chaque salve.
+Le morceau produit est court — une salve puis un silence — et l'app le joue en
+entier, une seule fois, le temps de l'écran d'appel. Sa durée n'a donc aucune
+importance pour le code : les vibrations suivent leur propre cadence
+(RING_PULSE_MS, dans components/IncomingCall.tsx).
+
+Ce script n'a d'intérêt que tant qu'aucune vraie sonnerie n'a été fournie : le
+jour où assets/ringtone.mp3 est remplacé par un enregistrement, il n'a plus
+d'objet et peut disparaître avec lui.
 
 Usage :  python3 tools/make-ringtone.py     (nécessite numpy et ffmpeg)
 """
@@ -60,7 +63,7 @@ PHRASE = [
     (71, 0.7), (74, 0.85), (71, 0.6), (67, 0.75),
     (64, 0.9), (71, 0.7), (67, 0.8), (64, 1.0),
 ]
-GAP_LOOP = 0.95     # silence avant que ça resonne
+GAP_LOOP = 0.95     # un peu de silence pour finir, plutôt qu'une coupe nette
 
 
 def phrase() -> np.ndarray:
@@ -93,10 +96,7 @@ def main() -> int:
         check=True,
     )
     tmp.unlink()
-    print(
-        f"{OUT} — boucle de {round(len(audio) / SR * 1000)} ms "
-        f"(RING_LOOP_MS), {OUT.stat().st_size // 1024} Ko"
-    )
+    print(f"{OUT} — {len(audio) / SR:.2f} s, {OUT.stat().st_size // 1024} Ko")
     return 0
 
 
