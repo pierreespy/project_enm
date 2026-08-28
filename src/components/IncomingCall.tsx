@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Path } from 'react-native-svg';
+import { FadeIn } from './FadeIn';
 import { heavy, medium, success } from '../lib/haptics';
 
 const PHOTO = require('../../assets/john-pork.png');
@@ -40,6 +41,7 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
   const { width, height } = useWindowDimensions();
   const [answered, setAnswered] = useState(false);
   const entrance = useRef(new Animated.Value(0)).current;
+  const ring = useRef(new Animated.Value(0)).current;
 
   // La photo est affichée en entier (jamais rognée) : les zones tactiles
   // restent alignées sur les boutons quel que soit le format de l'écran.
@@ -64,19 +66,40 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
     return () => clearTimeout(t);
   }, [answered, onDismiss]);
 
-  // L'écran arrive comme un appel : un léger zoom arrière, et ça sonne.
+  // L'écran arrive comme un appel : la photo tombe de haut en se posant.
+  // Le Modal n'anime rien lui-même (animationType="none"), sinon son propre
+  // fondu avalerait ce mouvement.
   useEffect(() => {
     if (!visible) {
       entrance.setValue(0);
       return;
     }
-    Animated.timing(entrance, {
+    Animated.spring(entrance, {
       toValue: 1,
-      duration: 280,
-      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
+      speed: 11,
+      bounciness: 7,
     }).start();
   }, [entrance, visible]);
+
+  // Et ça sonne aussi à l'écran : deux secousses brèves, en même temps que les
+  // deux coups haptiques, puis repos — cadence d'un téléphone qui sonne.
+  useEffect(() => {
+    if (!visible || answered) {
+      ring.setValue(0);
+      return;
+    }
+    const shake = Animated.sequence([
+      Animated.timing(ring, { toValue: 1, duration: 70, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(ring, { toValue: -1, duration: 140, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(ring, { toValue: 1, duration: 140, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(ring, { toValue: 0, duration: 70, easing: Easing.linear, useNativeDriver: true }),
+      Animated.delay(1180),
+    ]);
+    const loop = Animated.loop(shake);
+    loop.start();
+    return () => loop.stop();
+  }, [answered, ring, visible]);
 
   // Sonnerie haptique : deux coups rapprochés, puis silence — la cadence d'un
   // téléphone. Elle s'arrête dès que l'appel est pris ou refusé.
@@ -109,7 +132,7 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
   return (
     <Modal
       visible={visible}
-      animationType="fade"
+      animationType="none"
       supportedOrientations={['portrait']}
       onRequestClose={hangUp}
     >
@@ -119,9 +142,21 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
           style={{
             width: boxW,
             height: boxH,
-            opacity: entrance,
+            opacity: entrance.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 1] }),
             transform: [
-              { scale: entrance.interpolate({ inputRange: [0, 1], outputRange: [1.05, 1] }) },
+              { scale: entrance.interpolate({ inputRange: [0, 1], outputRange: [0.86, 1] }) },
+              {
+                translateY: entrance.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-boxH * 0.06, 0],
+                }),
+              },
+              {
+                rotate: ring.interpolate({
+                  inputRange: [-1, 1],
+                  outputRange: ['-1.1deg', '1.1deg'],
+                }),
+              },
             ],
           }}
         >
@@ -146,7 +181,7 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
         </Animated.View>
 
         {answered && (
-          <View style={styles.inCall}>
+          <FadeIn duration={220} distance={0} style={styles.inCall}>
             <Text style={styles.name}>John Pork</Text>
             <Text style={styles.status}>Appel en cours…</Text>
             <Pressable
@@ -157,7 +192,7 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
             >
               <PhoneIcon />
             </Pressable>
-          </View>
+          </FadeIn>
         )}
       </View>
     </Modal>

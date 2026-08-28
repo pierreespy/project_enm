@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableScale } from './PressableScale';
 import { colors, fonts } from '../theme';
 import type { Rubrique } from '../data/content';
 
@@ -12,19 +13,27 @@ export function RubriqueCard({ data, onOpen }: { data: Rubrique; onOpen: (url: s
         <Text style={[styles.chipText, { color: data.ink }]}>{data.chip}</Text>
       </View>
 
-      <Pressable onPress={() => onOpen(data.url)}>
-        {({ pressed }) => (
-          <Text style={[styles.title, pressed && styles.titlePressed]}>{data.title}</Text>
-        )}
-      </Pressable>
+      <PressableScale
+        onPress={() => onOpen(data.url)}
+        scaleTo={0.985}
+        accessibilityLabel={`Ouvrir : ${data.title}`}
+      >
+        <Text style={styles.title}>{data.title}</Text>
+      </PressableScale>
 
       <Text style={styles.summary}>{data.summary}</Text>
 
       <View style={styles.footer}>
         <Text style={styles.source}>{data.source}</Text>
-        <Pressable onPress={() => onOpen(data.url)} style={styles.arrowBtn} hitSlop={8}>
+        <PressableScale
+          onPress={() => onOpen(data.url)}
+          style={styles.arrowBtn}
+          scaleTo={0.88}
+          hitSlop={8}
+          accessibilityLabel="Ouvrir la source"
+        >
           <Text style={styles.arrow}>↗</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </View>
   );
@@ -62,7 +71,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     color: colors.ink,
   },
-  titlePressed: { color: colors.navy },
   summary: {
     fontFamily: fonts.regular,
     fontSize: 13,

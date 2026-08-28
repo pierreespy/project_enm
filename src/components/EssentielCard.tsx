@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableScale } from './PressableScale';
 import { colors, fonts } from '../theme';
 import type { Essentiel } from '../data/content';
 
@@ -7,19 +8,19 @@ import type { Essentiel } from '../data/content';
  *  anywhere opens the source article. */
 export function EssentielCard({ data, onOpen }: { data: Essentiel; onOpen: (url: string) => void }) {
   return (
-    <Pressable onPress={() => onOpen(data.url)} style={styles.card}>
-      {({ pressed }) => (
-        <>
-          <Text style={styles.label}>{data.label}</Text>
-          <Text style={[styles.title, pressed && styles.titlePressed]}>{data.title}</Text>
-          <Text style={styles.dek}>{data.dek}</Text>
-          <View style={styles.sourceRow}>
-            <Text style={styles.source}>{data.source}</Text>
-            <Text style={styles.arrow}>↗</Text>
-          </View>
-        </>
-      )}
-    </Pressable>
+    <PressableScale
+      onPress={() => onOpen(data.url)}
+      style={styles.card}
+      accessibilityLabel={`Ouvrir : ${data.title}`}
+    >
+      <Text style={styles.label}>{data.label}</Text>
+      <Text style={styles.title}>{data.title}</Text>
+      <Text style={styles.dek}>{data.dek}</Text>
+      <View style={styles.sourceRow}>
+        <Text style={styles.source}>{data.source}</Text>
+        <Text style={styles.arrow}>↗</Text>
+      </View>
+    </PressableScale>
   );
 }
 
@@ -48,7 +49,6 @@ const styles = StyleSheet.create({
     color: colors.onNavy,
     marginTop: 12,
   },
-  titlePressed: { color: colors.goldHover },
   dek: {
     fontFamily: fonts.regular,
     fontSize: 13,
