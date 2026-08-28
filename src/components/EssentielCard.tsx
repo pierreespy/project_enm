@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
-import { PressableScale } from './Press';
+import { PressableScale } from './PressableScale';
 import type { Essentiel } from '../data/content';
 
 /** Navy "L'essentiel du jour" hero card — the single featured story. Tapping

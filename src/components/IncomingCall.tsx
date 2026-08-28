@@ -95,7 +95,9 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
     return () => clearTimeout(t);
   }, [answered, onDismiss]);
 
-  // L'écran arrive comme un appel : il monte d'un cran, dézoome, et ça sonne.
+  // L'écran arrive comme un appel : la photo tombe de haut et se pose sur un
+  // ressort. Le Modal, lui, n'anime rien (animationType="none") — son propre
+  // fondu avalerait le mouvement, et l'appel paraîtrait simplement « apparu ».
   useEffect(() => {
     if (!visible) {
       entrance.setValue(0);
@@ -108,7 +110,7 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
     Animated.spring(entrance, {
       toValue: 1,
       useNativeDriver: true,
-      speed: 14,
+      speed: 11,
       bounciness: 7,
     }).start();
   }, [entrance, still, visible]);
@@ -207,7 +209,7 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
   return (
     <Modal
       visible={visible}
-      animationType="fade"
+      animationType="none"
       supportedOrientations={['portrait']}
       onRequestClose={hangUp}
     >
@@ -217,7 +219,9 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
           style={{
             width: boxW,
             height: boxH,
-            opacity: entrance,
+            // L'opacité est acquise à mi-course : la photo finit de se poser
+            // déjà pleinement visible, sinon le ressort se joue dans le vide.
+            opacity: entrance.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 1] }),
             transform: [
               { translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-7, 7] }) },
               {
@@ -226,9 +230,12 @@ export function IncomingCall({ visible, onDismiss }: { visible: boolean; onDismi
                   outputRange: ['-0.8deg', '0.8deg'],
                 }),
               },
-              { scale: entrance.interpolate({ inputRange: [0, 1], outputRange: [1.08, 1] }) },
+              { scale: entrance.interpolate({ inputRange: [0, 1], outputRange: [0.86, 1] }) },
               {
-                translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [26, 0] }),
+                translateY: entrance.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-boxH * 0.06, 0],
+                }),
               },
             ],
           }}

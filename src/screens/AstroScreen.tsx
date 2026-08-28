@@ -3,7 +3,7 @@ import { ScrollView, View, Text, Pressable, ActivityIndicator, StyleSheet } from
 import { Header } from '../components/Header';
 import { colors, fonts } from '../theme';
 import { FadeIn } from '../components/FadeIn';
-import { PressableScale } from '../components/Press';
+import { PressableScale } from '../components/PressableScale';
 import { ToggleButton } from '../components/ToggleButton';
 import { failure, soft, success, tap } from '../lib/haptics';
 import { fetchAstroIndex, fetchAstroLesson } from '../data/remote';

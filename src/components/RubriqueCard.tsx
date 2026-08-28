@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
-import { PressableScale } from './Press';
+import { PressableScale } from './PressableScale';
 import type { Rubrique } from '../data/content';
 
 /** White card for one rubrique: a colour-tinted category chip, a title, a

@@ -28,7 +28,7 @@ Parti pris repris fidèlement de la maquette : **papier crème éditorial**, acc
 
 Toutes les cartes entrent en fondu, décalées les unes des autres dans l'ordre de
 lecture (`src/components/FadeIn.tsx`). Les surfaces pressées s'enfoncent sous le
-doigt (`src/components/Press.tsx`), le bandeau du Journal se décale en parallaxe
+doigt (`src/components/PressableScale.tsx`), le bandeau du Journal se décale en parallaxe
 pendant le défilement, une pastille claire glisse sous l'onglet actif et chaque
 écran entre du côté d'où il vient.
 
@@ -116,7 +116,7 @@ src/components/
   RubriqueCard.tsx         Carte blanche à chip colorée
   TabBar.tsx               Barre d'onglets flottante (pastille glissante)
   ToggleButton.tsx         Bouton « ouvrir / réduire » partagé Terme + Astro
-  Press.tsx                Surface qui s'enfonce sous le doigt
+  PressableScale.tsx       Surface qui s’enfonce sous le doigt
   FadeIn.tsx               Entrée en fondu, décalable
   IncomingCall.tsx         Easter egg : l'écran d'appel entrant
   icons.tsx                Icônes SVG (page journal, balance de justice)

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Text, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { colors, fonts } from '../theme';
-import { PressableScale } from './Press';
+import { PressableScale } from './PressableScale';
 
 /**
  * Le bouton « ouvrir / réduire » du Terme du jour et du sommaire d'Astro —
