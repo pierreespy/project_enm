@@ -60,11 +60,6 @@ est indépendante de l'audio (`RING_PULSE_MS`, dans `IncomingCall.tsx`).
 **Changer de sonnerie = remplacer le fichier, rien d'autre**, sa durée n'entrant
 nulle part dans le code.
 
-Le fichier actuel est un **bouche-trou** : une composition maison — un arpège de
-marimba synthétisé par [`tools/make-ringtone.py`](tools/make-ringtone.py) —
-plutôt qu'une sonnerie système, qui ne pourrait pas être embarquée. Le jour où
-un vrai enregistrement le remplace, le générateur peut disparaître avec lui.
-
 Sur Android, où l'`overscroll` n'est qu'un effet visuel, le repli est de
 rafraîchir trois fois en moins de huit secondes.
 
@@ -125,13 +120,12 @@ src/hooks/
   useReduceMotion.ts       Réglage système « Réduire les animations »
 src/lib/
   haptics.ts               Vocabulaire haptique de l'app
-  ringtone.ts              Lecture en boucle de la sonnerie
+  ringtone.ts              Lecture de la sonnerie de l’appel
 src/screens/
   JournalScreen.tsx        Écran 1
   TermeScreen.tsx          Écran 2 (fiche dépliable)
   AstroScreen.tsx          Écran 3 (leçon du jour + sommaire des archives)
 assets/ringtone.mp3        Sonnerie de l'appel entrant
-tools/make-ringtone.py     Générateur de la sonnerie bouche-trou
 ```
 
 > L'ajout d'`expo-audio` est un module natif : Expo Go ne suffit plus pour
